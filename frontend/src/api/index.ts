@@ -64,9 +64,13 @@ export const userApi = {
 // 家庭相关 API
 export const familyApi = {
   getFamily: (id: number) => api.get(`/api/families/${id}`),
+  getMyFamily: () => api.get('/api/families/me'),
   createFamily: (data: { name: string }) => api.post('/api/families', data),
-  joinFamily: (id: number, data: { inviteCode: string }) =>
-    api.post(`/api/families/${id}/join`, data),
+  joinFamily: (data: { inviteCode: string }) =>
+    api.post('/api/families/join', data),
+  leaveFamily: () => api.post('/api/families/leave'),
+  refreshInviteCode: (id: number) =>
+    api.post(`/api/families/${id}/refresh-code`),
 };
 
 // 积分相关 API
@@ -188,6 +192,33 @@ export const statsApi = {
     api.get('/api/stats/achievements', { params }),
   exportData: (params: { type: string; familyId?: number }) =>
     api.get('/api/stats/export', { params }),
+};
+
+// 文件上传 API
+export const uploadApi = {
+  // 获取预签名上传 URL
+  getPresignUrl: (data: { filename: string; contentType: string }) =>
+    api.post('/api/upload/ppt/presign', data),
+  
+  // 直接上传文件
+  uploadFile: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/api/upload/ppt', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+  
+  // 获取文件列表
+  getFileList: () => api.get('/api/upload/ppt/list'),
+  
+  // 删除文件
+  deleteFile: (key: string) => api.delete(`/api/upload/ppt/${key}`),
+  
+  // 获取文件 URL
+  getFileUrl: (key: string) => `${api.defaults.baseURL}/api/upload/ppt/${key}`,
 };
 
 export default api;

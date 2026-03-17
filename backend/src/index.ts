@@ -13,10 +13,12 @@ import { rewardRoutes } from './routes/rewards';
 import { appealRoutes } from './routes/appeals';
 import { meetingRoutes } from './routes/meetings';
 import { statsRoutes } from './routes/stats';
+import { uploadRoutes } from './routes/upload';
 
 // 定义环境变量类型
 export type Env = {
   DB: D1Database;
+  PPT_BUCKET: R2Bucket;
   JWT_SECRET: string;
 };
 
@@ -51,6 +53,7 @@ app.route('/api/rewards', rewardRoutes);
 app.route('/api/appeals', appealRoutes);
 app.route('/api/meetings', meetingRoutes);
 app.route('/api/stats', statsRoutes);
+app.route('/api/upload', uploadRoutes);
 
 // 404 处理
 app.notFound((c) => {

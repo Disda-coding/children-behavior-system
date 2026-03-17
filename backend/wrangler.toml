@@ -12,6 +12,11 @@ binding = "DB"
 database_name = "children-behavior-db"
 database_id = "your-database-id"
 
+# R2 存储桶绑定（用于 PPT 文件上传）
+[[r2_buckets]]
+binding = "PPT_BUCKET"
+bucket_name = "children-behavior-ppts"
+
 # 开发环境
 [env.dev]
 name = "children-behavior-api-dev"
