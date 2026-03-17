@@ -29,7 +29,9 @@
           <div class="flex items-center justify-between">
             <div>
               <p class="text-primary-100 text-sm">我的总积分</p>
-              <p class="text-4xl font-bold mt-2">{{ stats.totalBalance }}</p>
+              <div class="mt-2">
+                <FlipNumber :value="stats.totalBalance" :size="48" class="text-white" />
+              </div>
             </div>
             <div class="bg-white/20 p-3 rounded-full">
               <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -44,7 +46,9 @@
           <div class="flex items-center justify-between">
             <div>
               <p class="text-gray-500 text-sm">今日获得</p>
-              <p class="text-3xl font-bold text-success-600 mt-2">+{{ stats.todayEarned }}</p>
+              <div class="mt-2">
+                <FlipNumber :value="stats.todayEarned" :size="36" class="text-success-600" />
+              </div>
             </div>
             <div class="bg-success-100 p-3 rounded-full">
               <svg class="w-8 h-8 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,7 +63,9 @@
           <div class="flex items-center justify-between">
             <div>
               <p class="text-gray-500 text-sm">今日扣除</p>
-              <p class="text-3xl font-bold text-danger-600 mt-2">-{{ stats.todayDeducted }}</p>
+              <div class="mt-2">
+                <FlipNumber :value="stats.todayDeducted" :size="36" class="text-danger-600" />
+              </div>
             </div>
             <div class="bg-danger-100 p-3 rounded-full">
               <svg class="w-8 h-8 text-danger-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,7 +80,9 @@
           <div class="flex items-center justify-between">
             <div>
               <p class="text-gray-500 text-sm">本周获得</p>
-              <p class="text-3xl font-bold text-warning-600 mt-2">+{{ stats.weekEarned }}</p>
+              <div class="mt-2">
+                <FlipNumber :value="stats.weekEarned" :size="36" class="text-warning-600" />
+              </div>
             </div>
             <div class="bg-warning-100 p-3 rounded-full">
               <svg class="w-8 h-8 text-warning-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -187,6 +195,7 @@
 import { ref, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { pointApi } from '@/api';
+import FlipNumber from '@/components/common/FlipNumber.vue';
 
 const authStore = useAuthStore();
 
