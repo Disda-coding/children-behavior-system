@@ -1,0 +1,21 @@
+name = "children-behavior-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# 环境变量
+[vars]
+JWT_SECRET = "your-jwt-secret-key-change-in-production"
+
+# D1 数据库绑定
+[[d1_databases]]
+binding = "DB"
+database_name = "children-behavior-db"
+database_id = "your-database-id"
+
+# 开发环境
+[env.dev]
+name = "children-behavior-api-dev"
+
+# 生产环境
+[env.production]
+name = "children-behavior-api-prod"
