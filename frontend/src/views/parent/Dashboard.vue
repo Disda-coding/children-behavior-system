@@ -140,6 +140,12 @@
         </router-link>
       </div>
 
+      <!-- 调试信息 -->
+      <div v-if="debugInfo" class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
+        <p class="text-sm text-yellow-800 font-medium">调试信息:</p>
+        <pre class="text-xs text-yellow-700 mt-1 overflow-auto">{{ debugInfo }}</pre>
+      </div>
+
       <!-- 家庭成员 -->
       <div class="bg-white rounded-2xl shadow-sm p-6 mb-8">
         <div class="flex items-center justify-between mb-4">
@@ -201,19 +207,20 @@ const pointRulesCount = ref(0);
 const achievementsCount = ref(0);
 const pendingAppealsCount = ref(0);
 const inviteCode = ref('');
+const debugInfo = ref('');
 
 const fetchFamilyMembers = async () => {
   try {
     if (authStore.user?.familyId) {
       const response = await familyApi.getFamily(authStore.user.familyId) as any;
-      console.log('Family API response:', response);
+      debugInfo.value = JSON.stringify(response, null, 2);
       familyMembers.value = response.members || [];
       // API 返回的是 family.invite_code，需要转换为 inviteCode
       inviteCode.value = response.family?.invite_code || '';
-      console.log('Invite code:', inviteCode.value);
     }
   } catch (error) {
     console.error('Failed to fetch family members:', error);
+    debugInfo.value = 'Error: ' + String(error);
   }
 };
 
