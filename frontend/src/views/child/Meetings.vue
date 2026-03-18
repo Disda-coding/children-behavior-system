@@ -20,7 +20,7 @@
           <h2 class="text-lg font-bold text-gray-800">我的 PPT 文件</h2>
           <button
             @click="showUploadModal = true"
-            class="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors flex items-center gap-2"
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -39,8 +39,8 @@
             class="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow"
           >
             <div class="flex items-start gap-3">
-              <div class="w-12 h-12 bg-danger-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg class="w-6 h-6 text-danger-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
@@ -53,19 +53,19 @@
             <div class="flex gap-2 mt-4">
               <button
                 @click="viewPPT(file)"
-                class="flex-1 py-2 bg-primary-50 text-primary-600 rounded-lg text-sm font-medium hover:bg-primary-100 transition-colors"
+                class="flex-1 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors"
               >
                 查看
               </button>
               <button
                 @click="usePPTForMeeting(file)"
-                class="flex-1 py-2 bg-success-50 text-success-600 rounded-lg text-sm font-medium hover:bg-success-100 transition-colors"
+                class="flex-1 py-2 bg-green-50 text-green-600 rounded-lg text-sm font-medium hover:bg-green-100 transition-colors"
               >
                 用于会议
               </button>
               <button
                 @click="deletePPT(file)"
-                class="py-2 px-3 bg-danger-50 text-danger-600 rounded-lg text-sm font-medium hover:bg-danger-100 transition-colors"
+                class="py-2 px-3 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -80,7 +80,7 @@
       <div class="mb-6">
         <button
           @click="showApplyModal = true"
-          class="bg-primary-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-primary-700 transition-colors flex items-center gap-2"
+          class="bg-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -109,9 +109,9 @@
               <span
                 :class="[
                   'px-3 py-1 rounded-full text-xs font-medium',
-                  meeting.status === 'pending' ? 'bg-warning-100 text-warning-700' :
-                  meeting.status === 'scheduled' ? 'bg-primary-100 text-primary-700' :
-                  meeting.status === 'completed' ? 'bg-success-100 text-success-700' :
+                  meeting.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                  meeting.status === 'scheduled' ? 'bg-blue-100 text-blue-700' :
+                  meeting.status === 'completed' ? 'bg-green-100 text-green-700' :
                   'bg-gray-100 text-gray-700'
                 ]"
               >
@@ -129,36 +129,36 @@
 
             <!-- PPT 文件 -->
             <div v-if="meeting.pptUrl" class="flex items-center gap-2 mb-3">
-              <svg class="w-5 h-5 text-danger-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               <button
                 @click="viewMeetingPPT(meeting)"
-                class="text-primary-600 hover:text-primary-700 text-sm"
+                class="text-blue-600 hover:text-blue-700 text-sm"
               >
                 查看会议 PPT
               </button>
             </div>
 
             <!-- 评分 -->
-            <div v-if="meeting.status === 'completed' && meeting.score !== null" class="bg-success-50 rounded-lg p-3">
+            <div v-if="meeting.status === 'completed' && meeting.score !== null" class="bg-green-50 rounded-lg p-3">
               <div class="flex items-center gap-2">
-                <span class="text-success-700 font-medium">评分:</span>
+                <span class="text-green-700 font-medium">评分:</span>
                 <div class="flex items-center gap-1">
                   <svg
                     v-for="n in 5"
                     :key="n"
                     class="w-5 h-5"
-                    :class="n <= meeting.score ? 'text-warning-400' : 'text-gray-300'"
+                    :class="n <= meeting.score ? 'text-yellow-400' : 'text-gray-300'"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
                 </div>
-                <span class="text-success-700 font-bold ml-2">{{ meeting.score }}分</span>
+                <span class="text-green-700 font-bold ml-2">{{ meeting.score }}分</span>
               </div>
-              <p v-if="meeting.scoreNote" class="text-success-600 text-sm mt-2">
+              <p v-if="meeting.scoreNote" class="text-green-600 text-sm mt-2">
                 {{ meeting.scoreNote }}
               </p>
             </div>
@@ -172,7 +172,7 @@
       <div class="bg-white rounded-2xl p-6 max-w-md mx-4 w-full">
         <h3 class="text-xl font-bold text-gray-800 mb-4">上传 PPT</h3>
         <div
-          class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary-500 transition-colors"
+          class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors"
           @dragover.prevent
           @drop.prevent="handleFileDrop"
         >
@@ -187,13 +187,13 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
           </svg>
           <p class="text-gray-600 mb-2">
-            <span v-if="selectedFile" class="text-primary-600 font-medium">{{ selectedFile.name }}</span>
+            <span v-if="selectedFile" class="text-blue-600 font-medium">{{ selectedFile.name }}</span>
             <span v-else>拖拽文件到此处，或</span>
           </p>
           <button
             @click="fileInput?.click()"
             type="button"
-            class="text-primary-600 hover:text-primary-700 font-medium"
+            class="text-blue-600 hover:text-blue-700 font-medium"
           >
             点击选择文件
           </button>
@@ -209,7 +209,7 @@
           <button
             @click="uploadPPT"
             :disabled="!selectedFile || isUploading"
-            class="flex-1 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            class="flex-1 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span v-if="isUploading">上传中...</span>
             <span v-else>上传</span>
@@ -254,7 +254,7 @@
           <input
             v-model="meetingForm.title"
             type="text"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="请输入会议主题"
           />
         </div>
@@ -265,7 +265,7 @@
           <textarea
             v-model="meetingForm.description"
             rows="3"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             placeholder="请简要描述会议内容..."
           ></textarea>
         </div>
@@ -276,7 +276,7 @@
           <input
             v-model="meetingForm.scheduledAt"
             type="datetime-local"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
 
@@ -285,7 +285,7 @@
           <label class="block text-sm font-medium text-gray-700 mb-2">选择 PPT</label>
           <select
             v-model="meetingForm.pptKey"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">不使用 PPT</option>
             <option v-for="file in pptFiles" :key="file.key" :value="file.key">
@@ -307,7 +307,7 @@
           <button
             @click="submitMeeting"
             :disabled="!meetingForm.title.trim() || isSubmitting"
-            class="flex-1 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            class="flex-1 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span v-if="isSubmitting">提交中...</span>
             <span v-else>提交申请</span>

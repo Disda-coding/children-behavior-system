@@ -42,7 +42,7 @@ const previousDigits = computed(() => {
 
 // 监听数值变化
 watch(() => props.value, (newVal, oldVal) => {
-  if (newVal !== oldVal) {
+  if (newVal !== oldVal && oldVal !== undefined) {
     const newDigits = newVal.toString().split('');
     const oldDigits = oldVal.toString().split('');
     

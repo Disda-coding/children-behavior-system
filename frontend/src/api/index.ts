@@ -48,34 +48,34 @@ export const authApi = {
     displayName: string;
     familyId?: number;
     familyName?: string;
-  }) => api.post('/api/auth/register', data),
-  
+  }) => api.post('/api/auth/register', data) as Promise<any>,
+
   login: (data: { username: string; password: string }) =>
-    api.post('/api/auth/login', data),
+    api.post('/api/auth/login', data) as Promise<any>,
 };
 
 // 用户相关 API
 export const userApi = {
-  getMe: () => api.get('/api/users/me'),
+  getMe: () => api.get('/api/users/me') as Promise<any>,
   updateMe: (data: { displayName?: string; avatarUrl?: string }) =>
-    api.put('/api/users/me', data),
+    api.put('/api/users/me', data) as Promise<any>,
 };
 
 // 家庭相关 API
 export const familyApi = {
-  getFamily: (id: number) => api.get(`/api/families/${id}`),
-  getMyFamily: () => api.get('/api/families/me'),
-  createFamily: (data: { name: string }) => api.post('/api/families', data),
+  getFamily: (id: number) => api.get(`/api/families/${id}`) as Promise<any>,
+  getMyFamily: () => api.get('/api/families/me') as Promise<any>,
+  createFamily: (data: { name: string }) => api.post('/api/families', data) as Promise<any>,
   joinFamily: (data: { inviteCode: string }) =>
-    api.post('/api/families/join', data),
-  leaveFamily: () => api.post('/api/families/leave'),
+    api.post('/api/families/join', data) as Promise<any>,
+  leaveFamily: () => api.post('/api/families/leave') as Promise<any>,
   refreshInviteCode: (id: number) =>
-    api.post(`/api/families/${id}/refresh-code`),
+    api.post(`/api/families/${id}/refresh-code`) as Promise<any>,
 };
 
 // 积分相关 API
 export const pointApi = {
-  getRules: () => api.get('/api/points/rules'),
+  getRules: () => api.get('/api/points/rules') as Promise<any>,
   createRule: (data: {
     familyId: number;
     name: string;
@@ -83,9 +83,9 @@ export const pointApi = {
     type: 'earn' | 'deduct';
     points: number;
     category?: string;
-  }) => api.post('/api/points/rules', data),
+  }) => api.post('/api/points/rules', data) as Promise<any>,
   getRecords: (params?: { userId?: number; type?: string }) =>
-    api.get('/api/points/records', { params }),
+    api.get('/api/points/records', { params }) as Promise<any>,
   createRecord: (data: {
     userId: number;
     type: 'earn' | 'deduct' | 'redeem' | 'convert';
@@ -93,16 +93,16 @@ export const pointApi = {
     reason: string;
     ruleId?: number;
     createdBy?: number;
-  }) => api.post('/api/points/records', data),
+  }) => api.post('/api/points/records', data) as Promise<any>,
   getStats: (params: { userId: number }) =>
-    api.get('/api/points/stats', { params }),
+    api.get('/api/points/stats', { params }) as Promise<any>,
 };
 
 // 成就相关 API
 export const achievementApi = {
   getAchievements: (params?: { familyId?: number }) =>
-    api.get('/api/achievements', { params }),
-  getTemplates: () => api.get('/api/achievements/templates'),
+    api.get('/api/achievements', { params }) as Promise<any>,
+  getTemplates: () => api.get('/api/achievements/templates') as Promise<any>,
   createAchievement: (data: {
     familyId?: number;
     templateId?: number;
@@ -114,15 +114,15 @@ export const achievementApi = {
     conditionUnit?: string;
     rewardPoints?: number;
     isTemplate?: boolean;
-  }) => api.post('/api/achievements', data),
+  }) => api.post('/api/achievements', data) as Promise<any>,
   getUserAchievements: (userId: number) =>
-    api.get(`/api/achievements/user/${userId}`),
+    api.get(`/api/achievements/user/${userId}`) as Promise<any>,
 };
 
 // 奖励相关 API
 export const rewardApi = {
   getRewards: (params?: { familyId?: number }) =>
-    api.get('/api/rewards', { params }),
+    api.get('/api/rewards', { params }) as Promise<any>,
   createReward: (data: {
     familyId: number;
     name: string;
@@ -132,34 +132,34 @@ export const rewardApi = {
     iconUrl?: string;
     stock?: number;
     config?: Record<string, any>;
-  }) => api.post('/api/rewards', data),
+  }) => api.post('/api/rewards', data) as Promise<any>,
   redeemReward: (
     id: number,
     data: { userId: number; hours?: number; note?: string }
-  ) => api.post(`/api/rewards/${id}/redeem`, data),
+  ) => api.post(`/api/rewards/${id}/redeem`, data) as Promise<any>,
   getRedemptions: (params?: { userId?: number }) =>
-    api.get('/api/rewards/redemptions', { params }),
+    api.get('/api/rewards/redemptions', { params }) as Promise<any>,
 };
 
 // 申诉相关 API
 export const appealApi = {
   getAppeals: (params?: { userId?: number; status?: string }) =>
-    api.get('/api/appeals', { params }),
+    api.get('/api/appeals', { params }) as Promise<any>,
   createAppeal: (data: {
     userId: number;
     pointRecordId: number;
     reason: string;
-  }) => api.post('/api/appeals', data),
+  }) => api.post('/api/appeals', data) as Promise<any>,
   updateAppeal: (
     id: number,
     data: { status: 'approved' | 'rejected'; response?: string; handledBy?: number }
-  ) => api.put(`/api/appeals/${id}`, data),
+  ) => api.put(`/api/appeals/${id}`, data) as Promise<any>,
 };
 
 // 会议相关 API
 export const meetingApi = {
   getMeetings: (params?: { familyId?: number; childId?: number }) =>
-    api.get('/api/meetings', { params }),
+    api.get('/api/meetings', { params }) as Promise<any>,
   createMeeting: (data: {
     familyId: number;
     childId: number;
@@ -167,7 +167,7 @@ export const meetingApi = {
     description?: string;
     pptUrl?: string;
     scheduledAt?: string;
-  }) => api.post('/api/meetings', data),
+  }) => api.post('/api/meetings', data) as Promise<any>,
   updateMeeting: (
     id: number,
     data: {
@@ -177,29 +177,29 @@ export const meetingApi = {
       status?: string;
       scheduledAt?: string;
     }
-  ) => api.put(`/api/meetings/${id}`, data),
+  ) => api.put(`/api/meetings/${id}`, data) as Promise<any>,
   scoreMeeting: (
     id: number,
     data: { score: number; scoreNote?: string }
-  ) => api.post(`/api/meetings/${id}/score`, data),
+  ) => api.post(`/api/meetings/${id}/score`, data) as Promise<any>,
 };
 
 // 统计相关 API
 export const statsApi = {
   getPointStats: (params: { userId: number; days?: number }) =>
-    api.get('/api/stats/points', { params }),
+    api.get('/api/stats/points', { params }) as Promise<any>,
   getAchievementStats: (params: { userId: number }) =>
-    api.get('/api/stats/achievements', { params }),
+    api.get('/api/stats/achievements', { params }) as Promise<any>,
   exportData: (params: { type: string; familyId?: number }) =>
-    api.get('/api/stats/export', { params }),
+    api.get('/api/stats/export', { params }) as Promise<any>,
 };
 
 // 文件上传 API
 export const uploadApi = {
   // 获取预签名上传 URL
   getPresignUrl: (data: { filename: string; contentType: string }) =>
-    api.post('/api/upload/ppt/presign', data),
-  
+    api.post('/api/upload/ppt/presign', data) as Promise<any>,
+
   // 直接上传文件
   uploadFile: (file: File) => {
     const formData = new FormData();
@@ -208,17 +208,17 @@ export const uploadApi = {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
-    });
+    }) as Promise<any>;
   },
-  
+
   // 获取文件列表
-  getFileList: () => api.get('/api/upload/ppt/list'),
-  
+  getFileList: () => api.get('/api/upload/ppt/list') as Promise<any>,
+
   // 删除文件
-  deleteFile: (key: string) => api.delete(`/api/upload/ppt/${key}`),
-  
+  deleteFile: (key: string) => api.delete(`/api/upload/ppt/${key}`) as Promise<any>,
+
   // 获取文件 URL
-  getFileUrl: (key: string) => `${api.defaults.baseURL}/api/upload/ppt/${key}`,
+  getFileUrl: (key: string) => `${api.defaults.baseURL}/api/upload/ppt/file/${encodeURIComponent(key)}`,
 };
 
 export default api;

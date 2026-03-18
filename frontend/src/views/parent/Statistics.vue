@@ -24,7 +24,7 @@
             :class="[
               'px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors',
               selectedRange === range.value
-                ? 'bg-primary-600 text-white'
+                ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             ]"
           >
@@ -45,10 +45,10 @@
           <div class="flex items-center justify-between">
             <div>
               <p class="text-gray-500 text-sm">总获得积分</p>
-              <p class="text-3xl font-bold text-success-600 mt-2">{{ totalEarned }}</p>
+              <p class="text-3xl font-bold text-green-600 mt-2">{{ totalEarned }}</p>
             </div>
-            <div class="bg-success-100 p-3 rounded-full">
-              <svg class="w-8 h-8 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-green-100 p-3 rounded-full">
+              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
             </div>
@@ -59,10 +59,10 @@
           <div class="flex items-center justify-between">
             <div>
               <p class="text-gray-500 text-sm">总扣除积分</p>
-              <p class="text-3xl font-bold text-danger-600 mt-2">{{ totalDeducted }}</p>
+              <p class="text-3xl font-bold text-red-600 mt-2">{{ totalDeducted }}</p>
             </div>
-            <div class="bg-danger-100 p-3 rounded-full">
-              <svg class="w-8 h-8 text-danger-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-red-100 p-3 rounded-full">
+              <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
               </svg>
             </div>
@@ -73,10 +73,10 @@
           <div class="flex items-center justify-between">
             <div>
               <p class="text-gray-500 text-sm">兑换次数</p>
-              <p class="text-3xl font-bold text-warning-600 mt-2">{{ redemptionCount }}</p>
+              <p class="text-3xl font-bold text-yellow-600 mt-2">{{ redemptionCount }}</p>
             </div>
-            <div class="bg-warning-100 p-3 rounded-full">
-              <svg class="w-8 h-8 text-warning-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-yellow-100 p-3 rounded-full">
+              <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
               </svg>
             </div>
@@ -87,10 +87,10 @@
           <div class="flex items-center justify-between">
             <div>
               <p class="text-gray-500 text-sm">成就完成率</p>
-              <p class="text-3xl font-bold text-primary-600 mt-2">{{ achievementRate }}%</p>
+              <p class="text-3xl font-bold text-blue-600 mt-2">{{ achievementRate }}%</p>
             </div>
-            <div class="bg-primary-100 p-3 rounded-full">
-              <svg class="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-blue-100 p-3 rounded-full">
+              <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
               </svg>
             </div>
@@ -104,7 +104,7 @@
           <h2 class="text-lg font-bold text-gray-800">积分明细</h2>
           <button
             @click="exportData"
-            class="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
+            class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -133,8 +133,8 @@
                   <span
                     :class="[
                       'px-2 py-1 rounded-full text-xs font-medium',
-                      record.type === 'earn' ? 'bg-success-100 text-success-700' :
-                      record.type === 'deduct' ? 'bg-danger-100 text-danger-700' :
+                      record.type === 'earn' ? 'bg-green-100 text-green-700' :
+                      record.type === 'deduct' ? 'bg-red-100 text-red-700' :
                       'bg-gray-100 text-gray-700'
                     ]"
                   >
@@ -143,7 +143,7 @@
                 </td>
                 <td class="py-3 px-4 text-sm text-gray-800">{{ record.reason }}</td>
                 <td class="py-3 px-4 text-sm text-right font-medium"
-                  :class="record.type === 'earn' ? 'text-success-600' : 'text-danger-600'"
+                  :class="record.type === 'earn' ? 'text-green-600' : 'text-red-600'"
                 >
                   {{ record.type === 'earn' ? '+' : '-' }}{{ record.amount }}
                 </td>

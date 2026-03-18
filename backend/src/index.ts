@@ -18,7 +18,7 @@ import { uploadRoutes } from './routes/upload';
 // 定义环境变量类型
 export type Env = {
   DB: D1Database;
-  PPT_BUCKET: R2Bucket;
+  PPT_STORAGE: KVNamespace;
   JWT_SECRET: string;
 };
 

@@ -15,10 +15,10 @@
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- 我的积分 -->
-      <div class="bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl p-6 text-white mb-8">
+      <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-6 text-white mb-8">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-primary-100 text-sm">我的积分</p>
+            <p class="text-blue-100 text-sm">我的积分</p>
             <p class="text-4xl font-bold mt-2">{{ userPoints }}</p>
           </div>
           <div class="bg-white/20 p-4 rounded-full">
@@ -38,7 +38,7 @@
           :class="[
             'px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors',
             activeCategory === category.value
-              ? 'bg-primary-600 text-white'
+              ? 'bg-blue-600 text-white'
               : 'bg-white text-gray-600 hover:bg-gray-100'
           ]"
         >
@@ -82,7 +82,7 @@
           <p class="font-medium text-gray-800">{{ selectedReward?.name }}</p>
           <p class="text-gray-500 text-sm mt-1">{{ selectedReward?.description }}</p>
           <div class="flex items-center gap-2 mt-3">
-            <span class="text-warning-600 font-bold text-xl">{{ getRewardCost(selectedReward!) }}</span>
+            <span class="text-yellow-600 font-bold text-xl">{{ getRewardCost(selectedReward!) }}</span>
             <span class="text-gray-500">积分</span>
           </div>
         </div>
@@ -95,7 +95,7 @@
           </button>
           <button
             @click="confirmRedeem"
-            class="flex-1 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors"
+            class="flex-1 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
           >
             确认兑换
           </button>
@@ -106,8 +106,8 @@
     <!-- 兑换成功弹窗 -->
     <div v-if="showSuccessModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div class="bg-white rounded-2xl p-8 max-w-md mx-4 text-center">
-        <div class="w-20 h-20 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg class="w-10 h-10 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
         </div>
@@ -116,7 +116,7 @@
         <p class="text-gray-500 text-sm">请等待家长审核</p>
         <button
           @click="showSuccessModal = false"
-          class="mt-6 w-full py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors"
+          class="mt-6 w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
         >
           知道了
         </button>
@@ -161,7 +161,7 @@ const getRewardCost = (reward: any) => {
   if (reward.config?.tieredPricing) {
     // 如果有阶梯价格，返回基础价格
     const tiers = Object.entries(reward.config.tieredPricing);
-    if (tiers.length > 0) {
+    if (tiers.length > 0 && tiers[0]) {
       return tiers[0][1] as number;
     }
   }

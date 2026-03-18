@@ -1,19 +1,19 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-200">
-    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-200 py-8">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md my-auto">
       <div class="text-center mb-8">
         <h1 class="text-3xl font-bold text-gray-800 mb-2">欢迎回来</h1>
         <p class="text-gray-600">登录儿童行为管理系统</p>
       </div>
 
-      <form @submit.prevent="handleLogin" class="space-y-6">
+      <form @submit.prevent="handleLogin" class="space-y-5">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">用户名</label>
           <input
             v-model="form.username"
             type="text"
             required
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
             placeholder="请输入用户名"
           />
         </div>
@@ -24,33 +24,35 @@
             v-model="form.password"
             type="password"
             required
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
             placeholder="请输入密码"
           />
         </div>
 
-        <button
-          type="submit"
-          :disabled="loading"
-          class="w-full bg-primary-600 text-white py-3 rounded-lg font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed btn-animate"
-        >
-          <span v-if="loading">登录中...</span>
-          <span v-else>登录</span>
-        </button>
+        <!-- 错误提示 -->
+        <div v-if="error" class="p-4 bg-red-50 text-red-700 rounded-lg text-sm">
+          {{ error }}
+        </div>
+
+        <div class="pt-4">
+          <button
+            type="submit"
+            :disabled="loading"
+            class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed btn-animate"
+          >
+            <span v-if="loading">登录中...</span>
+            <span v-else>登录</span>
+          </button>
+        </div>
       </form>
 
       <div class="mt-6 text-center">
         <p class="text-gray-600">
           还没有账号？
-          <router-link to="/register" class="text-primary-600 hover:text-primary-700 font-medium">
+          <router-link to="/register" class="text-blue-600 hover:text-blue-700 font-medium">
             立即注册
           </router-link>
         </p>
-      </div>
-
-      <!-- 错误提示 -->
-      <div v-if="error" class="mt-4 p-4 bg-danger-50 text-danger-700 rounded-lg">
-        {{ error }}
       </div>
     </div>
   </div>

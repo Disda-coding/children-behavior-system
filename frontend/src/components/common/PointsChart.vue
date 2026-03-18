@@ -107,7 +107,7 @@ const drawChart = () => {
         ctx.moveTo(x + barWidth / 4, earnedY);
       } else {
         const prevX = padding.left + barSpacing * (index - 1) + barSpacing * 0.2 + barWidth / 4;
-        const prevHeight = (props.data[index - 1].earned / maxValue) * chartHeight;
+        const prevHeight = ((props.data[index - 1]?.earned || 0) / maxValue) * chartHeight;
         const prevY = canvas.height - padding.bottom - prevHeight;
         ctx.lineTo(x + barWidth / 4, earnedY);
       }

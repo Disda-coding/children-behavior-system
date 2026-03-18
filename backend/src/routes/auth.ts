@@ -3,14 +3,14 @@ import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
-import { users } from '../db/schema';
+import { users, families } from '../db/schema';
 import type { Env } from '../index';
 
 // JWT 工具函数
 async function signJWT(payload: object, secret: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(JSON.stringify(payload));
-  
+
   // 创建签名
   const cryptoKey = await crypto.subtle.importKey(
     'raw',
@@ -19,26 +19,26 @@ async function signJWT(payload: object, secret: string): Promise<string> {
     false,
     ['sign']
   );
-  
+
   const signature = await crypto.subtle.sign('HMAC', cryptoKey, data);
-  
+
   // Base64 编码
   const base64Payload = btoa(JSON.stringify(payload));
   const base64Signature = btoa(String.fromCharCode(...new Uint8Array(signature)));
-  
+
   return `${base64Payload}.${base64Signature}`;
 }
 
 async function verifyJWT(token: string, secret: string): Promise<any> {
   const [payloadBase64, signatureBase64] = token.split('.');
-  
+
   if (!payloadBase64 || !signatureBase64) {
     throw new Error('Invalid token format');
   }
-  
+
   const encoder = new TextEncoder();
   const payload = JSON.parse(atob(payloadBase64));
-  
+
   // 验证签名
   const cryptoKey = await crypto.subtle.importKey(
     'raw',
@@ -47,22 +47,32 @@ async function verifyJWT(token: string, secret: string): Promise<any> {
     false,
     ['verify']
   );
-  
+
   const signature = Uint8Array.from(atob(signatureBase64), c => c.charCodeAt(0));
   const data = encoder.encode(JSON.stringify(payload));
-  
+
   const isValid = await crypto.subtle.verify('HMAC', cryptoKey, signature, data);
-  
+
   if (!isValid) {
     throw new Error('Invalid signature');
   }
-  
+
   // 检查过期时间
   if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
     throw new Error('Token expired');
   }
-  
+
   return payload;
+}
+
+// 生成邀请码
+function generateInviteCode(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
 }
 
 // 验证 Schema
@@ -71,8 +81,8 @@ const registerSchema = z.object({
   password: z.string().min(6),
   role: z.enum(['child', 'parent']),
   displayName: z.string().min(1).max(50),
-  familyId: z.number().optional(),
   familyName: z.string().optional(),
+  inviteCode: z.string().optional(),
 });
 
 const loginSchema = z.object({
@@ -87,7 +97,7 @@ authRoutes.post('/register', zValidator('json', registerSchema), async (c) => {
   const db = drizzle(c.env.DB);
   const data = c.req.valid('json');
   const { JWT_SECRET } = c.env;
-  
+
   try {
     // 检查用户名是否已存在
     const existingUser = await db
@@ -95,25 +105,59 @@ authRoutes.post('/register', zValidator('json', registerSchema), async (c) => {
       .from(users)
       .where(eq(users.username, data.username))
       .get();
-    
+
     if (existingUser) {
-      return c.json({ error: 'Username already exists' }, 400);
+      return c.json({ error: '用户名已存在' }, 400);
     }
-    
+
+    let familyId: number;
+
+    if (data.role === 'parent') {
+      // 家长：创建新家庭
+      if (!data.familyName) {
+        return c.json({ error: '家长注册需要提供家庭名称' }, 400);
+      }
+
+      const inviteCode = generateInviteCode();
+      const familyResult = await db.insert(families).values({
+        name: data.familyName,
+        inviteCode,
+      }).returning();
+
+      familyId = familyResult[0].id;
+    } else {
+      // 儿童：通过邀请码加入家庭
+      if (!data.inviteCode) {
+        return c.json({ error: '儿童注册需要提供邀请码' }, 400);
+      }
+
+      const family = await db
+        .select()
+        .from(families)
+        .where(eq(families.inviteCode, data.inviteCode))
+        .get();
+
+      if (!family) {
+        return c.json({ error: '邀请码无效' }, 400);
+      }
+
+      familyId = family.id;
+    }
+
     // 哈希密码
     const passwordHash = await hashPassword(data.password);
-    
+
     // 创建用户
     const result = await db.insert(users).values({
       username: data.username,
       passwordHash,
       role: data.role,
       displayName: data.displayName,
-      familyId: data.familyId || 1, // 默认家庭ID
+      familyId,
     }).returning();
-    
+
     const user = result[0];
-    
+
     // 生成 JWT
     const token = await signJWT(
       {
@@ -124,20 +168,21 @@ authRoutes.post('/register', zValidator('json', registerSchema), async (c) => {
       },
       JWT_SECRET
     );
-    
+
     return c.json({
-      message: 'User registered successfully',
+      message: '注册成功',
       user: {
         id: user.id,
         username: user.username,
         role: user.role,
         displayName: user.displayName,
+        familyId: user.familyId,
       },
       token,
     }, 201);
   } catch (error) {
     console.error('Registration error:', error);
-    return c.json({ error: 'Registration failed' }, 500);
+    return c.json({ error: '注册失败：' + (error as Error).message }, 500);
   }
 });
 
@@ -146,7 +191,7 @@ authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
   const db = drizzle(c.env.DB);
   const { username, password } = c.req.valid('json');
   const { JWT_SECRET } = c.env;
-  
+
   try {
     // 查找用户
     const user = await db
@@ -154,18 +199,18 @@ authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
       .from(users)
       .where(eq(users.username, username))
       .get();
-    
+
     if (!user) {
-      return c.json({ error: 'Invalid username or password' }, 401);
+      return c.json({ error: '用户名或密码错误' }, 401);
     }
-    
+
     // 验证密码
     const isValidPassword = await verifyPassword(password, user.passwordHash);
-    
+
     if (!isValidPassword) {
-      return c.json({ error: 'Invalid username or password' }, 401);
+      return c.json({ error: '用户名或密码错误' }, 401);
     }
-    
+
     // 生成 JWT
     const token = await signJWT(
       {
@@ -176,9 +221,9 @@ authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
       },
       JWT_SECRET
     );
-    
+
     return c.json({
-      message: 'Login successful',
+      message: '登录成功',
       user: {
         id: user.id,
         username: user.username,
@@ -190,7 +235,7 @@ authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    return c.json({ error: 'Login failed' }, 500);
+    return c.json({ error: '登录失败' }, 500);
   }
 });
 
@@ -198,11 +243,11 @@ authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
 async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(password);
-  
+
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  
+
   return hashHex;
 }
 

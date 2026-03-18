@@ -42,8 +42,8 @@
             class="flex items-center justify-between p-4 bg-gray-50 rounded-xl"
           >
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-danger-100 rounded-full flex items-center justify-center">
-                <span class="text-danger-600 font-bold">-</span>
+              <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <span class="text-red-600 font-bold">-</span>
               </div>
               <div>
                 <p class="font-medium text-gray-800">{{ record.reason }}</p>
@@ -51,7 +51,7 @@
               </div>
             </div>
             <div class="flex items-center gap-4">
-              <span class="text-danger-600 font-bold">-{{ record.amount }}</span>
+              <span class="text-red-600 font-bold">-{{ record.amount }}</span>
               <button
                 @click="openAppealModal(record)"
                 :disabled="hasAppealed(record.id)"
@@ -59,7 +59,7 @@
                   'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
                   hasAppealed(record.id)
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-primary-600 text-white hover:bg-primary-700'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
                 ]"
               >
                 {{ hasAppealed(record.id) ? '已申诉' : '申诉' }}
@@ -89,9 +89,9 @@
               <span
                 :class="[
                   'px-3 py-1 rounded-full text-xs font-medium',
-                  appeal.status === 'pending' ? 'bg-warning-100 text-warning-700' :
-                  appeal.status === 'approved' ? 'bg-success-100 text-success-700' :
-                  'bg-danger-100 text-danger-700'
+                  appeal.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                  appeal.status === 'approved' ? 'bg-green-100 text-green-700' :
+                  'bg-red-100 text-red-700'
                 ]"
               >
                 {{ appeal.status === 'pending' ? '审核中' : appeal.status === 'approved' ? '已通过' : '已驳回' }}
@@ -118,14 +118,14 @@
         <h3 class="text-xl font-bold text-gray-800 mb-4">提交申诉</h3>
         <div class="bg-gray-50 rounded-xl p-4 mb-4">
           <p class="font-medium text-gray-800">{{ selectedRecord?.reason }}</p>
-          <p class="text-danger-600 font-bold mt-1">-{{ selectedRecord?.amount }} 积分</p>
+          <p class="text-red-600 font-bold mt-1">-{{ selectedRecord?.amount }} 积分</p>
         </div>
         <div class="mb-4">
           <label class="block text-sm font-medium text-gray-700 mb-2">申诉理由</label>
           <textarea
             v-model="appealReason"
             rows="4"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             placeholder="请详细说明申诉理由..."
           ></textarea>
         </div>
@@ -139,7 +139,7 @@
           <button
             @click="submitAppeal"
             :disabled="!appealReason.trim()"
-            class="flex-1 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            class="flex-1 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             提交申诉
           </button>

@@ -18,15 +18,15 @@
       <div class="bg-white rounded-2xl shadow-sm p-6 mb-8">
         <div class="grid grid-cols-3 gap-4 text-center">
           <div>
-            <p class="text-3xl font-bold text-primary-600">{{ completedCount }}</p>
+            <p class="text-3xl font-bold text-blue-600">{{ completedCount }}</p>
             <p class="text-gray-500 text-sm">已完成</p>
           </div>
           <div>
-            <p class="text-3xl font-bold text-warning-600">{{ inProgressCount }}</p>
+            <p class="text-3xl font-bold text-yellow-600">{{ inProgressCount }}</p>
             <p class="text-gray-500 text-sm">进行中</p>
           </div>
           <div>
-            <p class="text-3xl font-bold text-success-600">{{ totalRewardPoints }}</p>
+            <p class="text-3xl font-bold text-green-600">{{ totalRewardPoints }}</p>
             <p class="text-gray-500 text-sm">获得积分</p>
           </div>
         </div>
@@ -62,17 +62,17 @@
     <!-- 成就完成弹窗 -->
     <div v-if="showCompletionModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div class="bg-white rounded-2xl p-8 max-w-md mx-4 text-center animate-bounce-in">
-        <div class="w-24 h-24 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg class="w-12 h-12 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
         </div>
         <h2 class="text-2xl font-bold text-gray-800 mb-2">恭喜！</h2>
         <p class="text-gray-600 mb-4">你完成了成就：{{ completedAchievementName }}</p>
-        <p class="text-success-600 font-bold text-lg mb-6">+{{ completedAchievementPoints }} 积分</p>
+        <p class="text-green-600 font-bold text-lg mb-6">+{{ completedAchievementPoints }} 积分</p>
         <button
           @click="showCompletionModal = false"
-          class="bg-primary-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-primary-700 transition-colors"
+          class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
         >
           太棒了！
         </button>
