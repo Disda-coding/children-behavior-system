@@ -117,6 +117,8 @@ export const achievementApi = {
   }) => api.post('/api/achievements', data) as Promise<any>,
   getUserAchievements: (userId: number) =>
     api.get(`/api/achievements/user/${userId}`) as Promise<any>,
+  assignAchievement: (id: number, data: { userId: number; note?: string }) =>
+    api.post(`/api/achievements/${id}/assign`, data) as Promise<any>,
 };
 
 // 奖励相关 API
