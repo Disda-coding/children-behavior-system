@@ -31,7 +31,7 @@
     <!-- 主要内容 -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- 统计卡片 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
         <div class="bg-white rounded-2xl p-6 shadow-sm card-hover">
           <div class="flex items-center justify-between">
             <div>
@@ -90,7 +90,7 @@
       </div>
 
       <!-- 快捷入口 -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
         <router-link
           to="/parent/points"
           class="bg-white rounded-xl p-5 shadow-sm card-hover flex flex-col items-center justify-center py-8"
@@ -141,7 +141,7 @@
       </div>
 
       <!-- 家庭成员 -->
-      <div class="bg-white rounded-2xl shadow-sm p-6 mb-8">
+      <div class="bg-white rounded-2xl shadow-sm p-6 mb-16">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-lg font-bold text-gray-800">家庭成员</h2>
           <div class="text-sm">
