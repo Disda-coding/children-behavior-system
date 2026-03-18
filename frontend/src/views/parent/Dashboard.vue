@@ -31,7 +31,7 @@
     <!-- 主要内容 -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- 统计卡片 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mb-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
         <div class="bg-white rounded-2xl p-6 shadow-sm card-hover">
           <div class="flex items-center justify-between">
             <div>
@@ -90,7 +90,7 @@
       </div>
 
       <!-- 快捷入口 -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-8">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
         <router-link
           to="/parent/points"
           class="bg-white rounded-xl p-5 shadow-sm card-hover flex flex-col items-center justify-center py-8"
@@ -157,7 +157,7 @@
         <div v-if="familyMembers.length === 0" class="text-center py-8 text-gray-500">
           暂无家庭成员
         </div>
-        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div
             v-for="member in familyMembers"
             :key="member.id"
@@ -206,9 +206,11 @@ const fetchFamilyMembers = async () => {
   try {
     if (authStore.user?.familyId) {
       const response = await familyApi.getFamily(authStore.user.familyId) as any;
+      console.log('Family API response:', response);
       familyMembers.value = response.members || [];
       // API 返回的是 family.invite_code，需要转换为 inviteCode
       inviteCode.value = response.family?.invite_code || '';
+      console.log('Invite code:', inviteCode.value);
     }
   } catch (error) {
     console.error('Failed to fetch family members:', error);
