@@ -84,6 +84,7 @@ export const pointApi = {
     points: number;
     category?: string;
   }) => api.post('/api/points/rules', data) as Promise<any>,
+  deleteRule: (id: number) => api.delete(`/api/points/rules/${id}`) as Promise<any>,
   getRecords: (params?: { userId?: number; type?: string }) =>
     api.get('/api/points/records', { params }) as Promise<any>,
   createRecord: (data: {

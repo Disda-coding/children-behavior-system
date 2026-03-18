@@ -13,7 +13,7 @@
       </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8">
       <!-- 积分规则管理 -->
       <div class="bg-white rounded-2xl shadow-sm p-6 mb-8">
         <div class="flex items-center justify-between mb-6">
@@ -50,12 +50,69 @@
             </div>
             <button
               @click="deleteRule(rule.id)"
-              class="text-red-600 hover:text-red-700"
+              class="text-red-600 hover:text-red-700 px-3 py-1 rounded hover:bg-red-50 transition-colors"
             >
               删除
             </button>
           </div>
         </div>
+      </div>
+
+      <!-- 快速添加积分 -->
+      <div class="bg-white rounded-2xl shadow-sm p-6 mb-8">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-lg font-bold text-gray-800">快速添加积分</h2>
+        </div>
+        <form @submit.prevent="quickAddRecord" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">选择孩子</label>
+            <select
+              v-model="quickRecord.userId"
+              required
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option v-for="child in children" :key="child.id" :value="child.id">
+                {{ child.displayName }}
+              </option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">选择规则</label>
+            <select
+              v-model="quickRecord.ruleId"
+              @change="onRuleChange"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">自定义</option>
+              <option v-for="rule in rules" :key="rule.id" :value="rule.id">
+                {{ rule.name }} ({{ rule.type === 'earn' ? '+' : '-' }}{{ rule.points }})
+              </option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">积分</label>
+            <input
+              v-model.number="quickRecord.amount"
+              type="number"
+              required
+              min="1"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          <div class="flex items-end">
+            <button
+              type="submit"
+              :class="[
+                'w-full py-2 rounded-lg font-medium transition-colors',
+                quickRecord.amount >= 0
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'bg-red-600 text-white hover:bg-red-700'
+              ]"
+            >
+              {{ quickRecord.amount >= 0 ? '奖励' : '扣除' }}积分
+            </button>
+          </div>
+        </form>
       </div>
 
       <!-- 积分记录 -->
@@ -258,6 +315,13 @@ const newRecord = ref({
   reason: '',
 });
 
+// 快速添加积分
+const quickRecord = ref({
+  userId: 0,
+  ruleId: '',
+  amount: 10,
+});
+
 const fetchRules = async () => {
   try {
     const response = await pointApi.getRules() as any;
@@ -281,12 +345,55 @@ const fetchChildren = async () => {
     if (authStore.user?.familyId) {
       const response = await familyApi.getFamily(authStore.user.familyId) as any;
       children.value = (response.members || []).filter((m: any) => m.role === 'child');
-      if (children.value.length > 0 && !newRecord.value.userId) {
-        newRecord.value.userId = children.value[0].id;
+      if (children.value.length > 0) {
+        if (!newRecord.value.userId) {
+          newRecord.value.userId = children.value[0].id;
+        }
+        if (!quickRecord.value.userId) {
+          quickRecord.value.userId = children.value[0].id;
+        }
       }
     }
   } catch (error) {
     console.error('Failed to fetch children:', error);
+  }
+};
+
+const onRuleChange = () => {
+  if (quickRecord.value.ruleId) {
+    const rule = rules.value.find(r => r.id === parseInt(quickRecord.value.ruleId));
+    if (rule) {
+      quickRecord.value.amount = rule.type === 'earn' ? rule.points : -rule.points;
+    }
+  }
+};
+
+const quickAddRecord = async () => {
+  try {
+    const rule = quickRecord.value.ruleId 
+      ? rules.value.find(r => r.id === parseInt(quickRecord.value.ruleId))
+      : null;
+    
+    await pointApi.createRecord({
+      userId: quickRecord.value.userId,
+      type: quickRecord.value.amount >= 0 ? 'earn' : 'deduct',
+      amount: Math.abs(quickRecord.value.amount),
+      reason: rule ? rule.name : '自定义',
+      createdBy: authStore.user?.id,
+    });
+    
+    // 重置表单
+    quickRecord.value = {
+      userId: children.value[0]?.id || 0,
+      ruleId: '',
+      amount: 10,
+    };
+    
+    fetchRecords();
+    alert('积分添加成功！');
+  } catch (error) {
+    console.error('Failed to add record:', error);
+    alert('添加记录失败');
   }
 };
 
@@ -311,10 +418,12 @@ const addRule = async () => {
 const deleteRule = async (id: number) => {
   if (!confirm('确定要删除这个规则吗？')) return;
   try {
-    // TODO: 添加删除规则 API
-    alert('删除功能开发中');
+    await pointApi.deleteRule(id);
+    fetchRules();
+    alert('删除成功');
   } catch (error) {
     console.error('Failed to delete rule:', error);
+    alert('删除失败');
   }
 };
 
