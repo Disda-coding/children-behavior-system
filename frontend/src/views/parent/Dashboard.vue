@@ -31,7 +31,7 @@
     <!-- 主要内容 -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- 统计卡片 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         <div class="bg-white rounded-2xl p-6 shadow-sm card-hover">
           <div class="flex items-center justify-between">
             <div>
@@ -90,7 +90,7 @@
       </div>
 
       <!-- 快捷入口 -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
         <router-link
           to="/parent/points"
           class="bg-white rounded-xl p-5 shadow-sm card-hover flex flex-col items-center justify-center py-8"
@@ -140,12 +140,6 @@
         </router-link>
       </div>
 
-      <!-- 调试信息 -->
-      <div v-if="debugInfo" class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
-        <p class="text-sm text-yellow-800 font-medium">调试信息:</p>
-        <pre class="text-xs text-yellow-700 mt-1 overflow-auto">{{ debugInfo }}</pre>
-      </div>
-
       <!-- 家庭成员 -->
       <div class="bg-white rounded-2xl shadow-sm p-6 mb-8">
         <div class="flex items-center justify-between mb-4">
@@ -163,7 +157,7 @@
         <div v-if="familyMembers.length === 0" class="text-center py-8 text-gray-500">
           暂无家庭成员
         </div>
-        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div
             v-for="member in familyMembers"
             :key="member.id"
