@@ -215,8 +215,8 @@ const fetchFamilyMembers = async () => {
       const response = await familyApi.getFamily(authStore.user.familyId) as any;
       debugInfo.value = JSON.stringify(response, null, 2);
       familyMembers.value = response.members || [];
-      // API 返回的是 family.invite_code，需要转换为 inviteCode
-      inviteCode.value = response.family?.invite_code || '';
+      // API 返回的是 family.inviteCode（驼峰命名）
+      inviteCode.value = response.family?.inviteCode || '';
     }
   } catch (error) {
     console.error('Failed to fetch family members:', error);
