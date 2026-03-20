@@ -14,6 +14,25 @@
     </nav>
 
     <main class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-8">
+      <!-- 快速添加常用成就 -->
+      <div class="bg-white rounded-2xl shadow-sm p-6 mb-8">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-lg font-bold text-gray-800">快速添加常用成就</h2>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <button
+            v-for="template in achievementTemplates"
+            :key="template.name"
+            @click="quickAddAchievement(template)"
+            class="p-4 bg-gray-50 rounded-xl hover:bg-green-50 hover:border-green-200 border border-transparent transition-all text-center"
+          >
+            <div class="text-2xl mb-2">{{ template.icon }}</div>
+            <p class="text-sm font-medium text-gray-800">{{ template.name }}</p>
+            <p class="text-xs text-gray-500 mt-1">{{ template.conditionValue }}{{ template.conditionUnit }}</p>
+          </button>
+        </div>
+      </div>
+
       <!-- 成就列表 -->
       <div class="bg-white rounded-2xl shadow-sm p-6 mb-8">
         <div class="flex items-center justify-between mb-6">
@@ -22,12 +41,12 @@
             @click="showAddModal = true"
             class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
           >
-            添加成就
+            添加自定义成就
           </button>
         </div>
 
         <div v-if="achievements.length === 0" class="text-center py-8 text-gray-500">
-          暂无成就，点击上方按钮添加
+          暂无成就，点击上方按钮添加或使用快速添加
         </div>
 
         <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -38,9 +57,7 @@
           >
             <div class="flex items-start space-x-3">
               <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                </svg>
+                <span class="text-2xl">{{ achievement.icon || '🏆' }}</span>
               </div>
               <div class="flex-1">
                 <h3 class="font-medium text-gray-800">{{ achievement.name }}</h3>
@@ -74,9 +91,7 @@
           >
             <div class="flex items-center space-x-3">
               <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
-                <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                </svg>
+                <span class="text-xl">{{ record.achievement?.icon || '🏆' }}</span>
               </div>
               <div>
                 <p class="font-medium text-gray-800">{{ record.achievement?.name }}</p>
@@ -114,6 +129,23 @@
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
               placeholder="可选"
             />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">图标</label>
+            <div class="grid grid-cols-8 gap-2">
+              <button
+                v-for="icon in commonIcons"
+                :key="icon"
+                type="button"
+                @click="newAchievement.icon = icon"
+                :class="[
+                  'w-10 h-10 rounded-lg text-xl flex items-center justify-center transition-colors',
+                  newAchievement.icon === icon ? 'bg-green-100 border-2 border-green-500' : 'bg-gray-50 hover:bg-gray-100'
+                ]"
+              >
+                {{ icon }}
+              </button>
+            </div>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">条件类型</label>
@@ -228,9 +260,29 @@ const showAddModal = ref(false);
 const showAssignModal = ref(false);
 const selectedAchievement = ref<any>(null);
 
+// 常用图标
+const commonIcons = ['🏆', '🥇', '🥈', '🥉', '⭐', '💫', '🌟', '✨', '🎯', '🎖️', '🏅', '🌈', '🔥', '💪', '📚'];
+
+// 常用成就模板
+const achievementTemplates = [
+  { name: '早起达人', icon: '🌅', description: '连续早起不赖床', conditionType: 'consecutive', conditionValue: 7, conditionUnit: '天' },
+  { name: '作业之星', icon: '⭐', description: '按时完成所有作业', conditionType: 'consecutive', conditionValue: 5, conditionUnit: '天' },
+  { name: '阅读小能手', icon: '📚', description: '累计阅读时长', conditionType: 'accumulate', conditionValue: 10, conditionUnit: '小时' },
+  { name: '运动健将', icon: '⚽', description: '累计运动次数', conditionType: 'count', conditionValue: 20, conditionUnit: '次' },
+  { name: '整理大师', icon: '🧹', description: '保持房间整洁', conditionType: 'consecutive', conditionValue: 7, conditionUnit: '天' },
+  { name: '礼貌之星', icon: '🌟', description: '主动问好、说谢谢', conditionType: 'count', conditionValue: 30, conditionUnit: '次' },
+  { name: '节约小卫士', icon: '💧', description: '节约用水用电', conditionType: 'consecutive', conditionValue: 14, conditionUnit: '天' },
+  { name: '助人之星', icon: '🤝', description: '帮助他人次数', conditionType: 'count', conditionValue: 10, conditionUnit: '次' },
+  { name: '专注小达人', icon: '🎯', description: '专注学习时长', conditionType: 'accumulate', conditionValue: 20, conditionUnit: '小时' },
+  { name: '创意之星', icon: '🎨', description: '完成创意作品', conditionType: 'count', conditionValue: 5, conditionUnit: '件' },
+  { name: '音乐小天才', icon: '🎵', description: '练习乐器时长', conditionType: 'accumulate', conditionValue: 15, conditionUnit: '小时' },
+  { name: '环保卫士', icon: '🌱', description: '参与环保活动', conditionType: 'count', conditionValue: 5, conditionUnit: '次' },
+];
+
 const newAchievement = ref({
   name: '',
   description: '',
+  icon: '🏆',
   conditionType: 'consecutive' as 'consecutive' | 'count' | 'accumulate',
   conditionValue: 7,
   conditionUnit: '天',
@@ -263,7 +315,6 @@ const fetchChildren = async () => {
 
 const fetchAssignedAchievements = async () => {
   try {
-    // 获取所有孩子的成就
     const allAssigned: any[] = [];
     for (const child of children.value) {
       const response = await achievementApi.getUserAchievements(child.id) as any;
@@ -281,6 +332,25 @@ const fetchAssignedAchievements = async () => {
   }
 };
 
+const quickAddAchievement = async (template: any) => {
+  try {
+    await achievementApi.createAchievement({
+      familyId: authStore.user?.familyId,
+      name: template.name,
+      description: template.description,
+      conditionType: template.conditionType,
+      conditionValue: template.conditionValue,
+      conditionUnit: template.conditionUnit,
+      iconUrl: template.icon,
+    });
+    fetchAchievements();
+    alert(`已添加成就：${template.name}`);
+  } catch (error) {
+    console.error('Failed to add achievement:', error);
+    alert('添加成就失败');
+  }
+};
+
 const addAchievement = async () => {
   try {
     await achievementApi.createAchievement({
@@ -290,9 +360,10 @@ const addAchievement = async () => {
       conditionType: newAchievement.value.conditionType,
       conditionValue: newAchievement.value.conditionValue,
       conditionUnit: newAchievement.value.conditionUnit,
+      iconUrl: newAchievement.value.icon,
     });
     showAddModal.value = false;
-    newAchievement.value = { name: '', description: '', conditionType: 'consecutive', conditionValue: 7, conditionUnit: '天' };
+    newAchievement.value = { name: '', description: '', icon: '🏆', conditionType: 'consecutive', conditionValue: 7, conditionUnit: '天' };
     fetchAchievements();
   } catch (error) {
     console.error('Failed to add achievement:', error);
