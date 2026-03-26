@@ -1,92 +1,95 @@
 <template>
-  <div class="relative min-h-screen overflow-hidden bg-slate-950">
-    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.28),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(168,85,247,0.26),_transparent_24%),linear-gradient(135deg,_#0f172a,_#1e293b_55%,_#111827)]"></div>
-    <div class="relative mx-auto flex min-h-screen max-w-7xl items-center px-4 py-10 sm:px-6 lg:px-8">
-      <div class="grid w-full overflow-hidden rounded-[32px] border border-white/10 bg-white/90 shadow-2xl backdrop-blur md:grid-cols-[1.08fr_0.92fr]">
-        <section class="relative hidden overflow-hidden bg-slate-900 px-10 py-12 text-white md:flex md:flex-col md:justify-between">
-          <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.45),_transparent_35%),radial-gradient(circle_at_bottom_right,_rgba(236,72,153,0.28),_transparent_30%)]"></div>
-          <div class="relative">
-            <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-sm text-blue-100">
-              🌟 儿童行为管理与激励系统
-            </div>
-            <h1 class="mt-6 text-4xl font-bold leading-tight">让每一次好习惯，都被认真看见</h1>
-            <p class="mt-4 max-w-lg text-sm leading-7 text-slate-200">
-              通过积分、成就和奖励兑换，把家庭教育变成更轻松、更有参与感的成长旅程。
-            </p>
-          </div>
-
-          <div class="relative grid gap-4 sm:grid-cols-3">
-            <div class="rounded-2xl border border-white/10 bg-white/10 p-4">
-              <p class="text-xs uppercase tracking-[0.28em] text-slate-300">实时</p>
-              <p class="mt-2 text-lg font-semibold">积分反馈</p>
-            </div>
-            <div class="rounded-2xl border border-white/10 bg-white/10 p-4">
-              <p class="text-xs uppercase tracking-[0.28em] text-slate-300">趣味</p>
-              <p class="mt-2 text-lg font-semibold">成就动画</p>
-            </div>
-            <div class="rounded-2xl border border-white/10 bg-white/10 p-4">
-              <p class="text-xs uppercase tracking-[0.28em] text-slate-300">协作</p>
-              <p class="mt-2 text-lg font-semibold">家庭共育</p>
-            </div>
-          </div>
-        </section>
-
-        <section class="px-6 py-8 sm:px-8 lg:px-10 lg:py-12">
-          <div class="mx-auto w-full max-w-md">
-            <div class="mb-8">
-              <p class="text-sm font-medium text-blue-600">欢迎回来</p>
-              <h2 class="mt-2 text-3xl font-bold text-slate-900">登录你的成长空间</h2>
-              <p class="mt-3 text-sm leading-6 text-slate-500">
-                家长可管理规则和奖励，孩子可查看积分、成就与家庭会议安排。
-              </p>
-            </div>
-
-            <form @submit.prevent="handleLogin" class="space-y-5">
-              <div>
-                <label class="mb-2 block text-sm font-medium text-slate-700">用户名</label>
-                <input
-                  v-model="form.username"
-                  type="text"
-                  required
-                  class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 shadow-sm outline-none transition-all placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100"
-                  placeholder="请输入用户名"
-                />
-              </div>
-
-              <div>
-                <label class="mb-2 block text-sm font-medium text-slate-700">密码</label>
-                <input
-                  v-model="form.password"
-                  type="password"
-                  required
-                  class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 shadow-sm outline-none transition-all placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100"
-                  placeholder="请输入密码"
-                />
-              </div>
-
-              <div v-if="error" class="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {{ error }}
-              </div>
-
-              <button
-                type="submit"
-                :disabled="loading"
-                class="w-full rounded-2xl bg-slate-900 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-900/20 transition-all hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60 btn-animate"
-              >
-                <span v-if="loading">登录中...</span>
-                <span v-else>进入系统</span>
-              </button>
-            </form>
-
-            <div class="mt-8 rounded-2xl bg-slate-50 px-4 py-4 text-sm text-slate-600">
-              还没有账号？
-              <router-link to="/register" class="font-semibold text-blue-600 hover:text-blue-700">
-                立即注册
-              </router-link>
-            </div>
-          </div>
-        </section>
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4">
+    <div class="w-full max-w-md">
+      <!-- Logo 区域 -->
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg mb-4">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-800">儿童行为管理系统</h1>
+        <p class="text-gray-500 mt-1">让每一次好习惯都被看见</p>
       </div>
+
+      <!-- 登录卡片 -->
+      <div class="bg-white rounded-2xl shadow-xl p-8">
+        <div class="mb-6">
+          <h2 class="text-xl font-semibold text-gray-800">欢迎回来</h2>
+          <p class="text-sm text-gray-500 mt-1">请登录您的账号</p>
+        </div>
+
+        <form @submit.prevent="handleLogin" class="space-y-5">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">用户名</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <input
+                v-model="form.username"
+                type="text"
+                required
+                class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
+                placeholder="请输入用户名"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">密码</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <input
+                v-model="form.password"
+                type="password"
+                required
+                class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
+                placeholder="请输入密码"
+              />
+            </div>
+          </div>
+
+          <div v-if="error" class="p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">
+            {{ error }}
+          </div>
+
+          <button
+            type="submit"
+            :disabled="loading"
+            class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/30"
+          >
+            <span v-if="loading" class="flex items-center justify-center">
+              <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              登录中...
+            </span>
+            <span v-else>登录</span>
+          </button>
+        </form>
+
+        <div class="mt-6 text-center">
+          <p class="text-gray-600">
+            还没有账号？
+            <router-link to="/register" class="text-blue-600 hover:text-blue-700 font-medium">
+              立即注册
+            </router-link>
+          </p>
+        </div>
+      </div>
+
+      <!-- 底部信息 -->
+      <p class="text-center text-gray-400 text-sm mt-8">
+        © 2024 儿童行为管理系统
+      </p>
     </div>
   </div>
 </template>
