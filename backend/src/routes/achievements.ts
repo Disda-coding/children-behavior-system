@@ -10,21 +10,27 @@ const achievementRoutes = new Hono<{ Bindings: Env }>();
 // 获取成就列表
 achievementRoutes.get('/', async (c) => {
   const db = drizzle(c.env.DB);
-  
+
   try {
     const familyId = c.req.query('familyId');
-    
-    let query = db
-      .select()
-      .from(achievements)
-      .where(eq(achievements.isActive, true));
-    
+
+    let list;
+
     if (familyId) {
-      query = query.where(eq(achievements.familyId, parseInt(familyId)));
+      list = await db
+        .select()
+        .from(achievements)
+        .where(and(
+          eq(achievements.isActive, true),
+          eq(achievements.familyId, parseInt(familyId))
+        ));
+    } else {
+      list = await db
+        .select()
+        .from(achievements)
+        .where(eq(achievements.isActive, true));
     }
-    
-    const list = await query;
-    
+
     return c.json({ achievements: list });
   } catch (error) {
     console.error('Get achievements error:', error);
@@ -323,23 +329,34 @@ achievementRoutes.get('/user/:userId', async (c) => {
   const db = drizzle(c.env.DB);
   const userId = parseInt(c.req.param('userId'));
   const includeRevoked = c.req.query('includeRevoked') === 'true';
-  
+
   try {
-    let query = db
-      .select({
-        userAchievement: userAchievements,
-        achievement: achievements,
-      })
-      .from(userAchievements)
-      .leftJoin(achievements, eq(userAchievements.achievementId, achievements.id))
-      .where(eq(userAchievements.userId, userId));
-    
-    // 默认不包含已撤销的成就
+    let userAchievementsList;
+
     if (!includeRevoked) {
-      query = query.where(eq(userAchievements.isRevoked, false));
+      userAchievementsList = await db
+        .select({
+          userAchievement: userAchievements,
+          achievement: achievements,
+        })
+        .from(userAchievements)
+        .leftJoin(achievements, eq(userAchievements.achievementId, achievements.id))
+        .where(and(
+          eq(userAchievements.userId, userId),
+          eq(userAchievements.isRevoked, false)
+        ))
+        .orderBy(desc(userAchievements.createdAt));
+    } else {
+      userAchievementsList = await db
+        .select({
+          userAchievement: userAchievements,
+          achievement: achievements,
+        })
+        .from(userAchievements)
+        .leftJoin(achievements, eq(userAchievements.achievementId, achievements.id))
+        .where(eq(userAchievements.userId, userId))
+        .orderBy(desc(userAchievements.createdAt));
     }
-    
-    const userAchievementsList = await query.orderBy(desc(userAchievements.createdAt));
     
     return c.json({
       userAchievements: userAchievementsList.map(ua => ({
@@ -398,6 +415,119 @@ achievementRoutes.get('/family/:familyId/children-achievements', async (c) => {
   } catch (error) {
     console.error('Get family children achievements error:', error);
     return c.json({ error: 'Failed to get family children achievements' }, 500);
+  }
+});
+
+// 导出成就配置
+achievementRoutes.get('/export', async (c) => {
+  const db = drizzle(c.env.DB);
+  const familyId = c.req.query('familyId');
+  
+  try {
+    let list;
+    
+    if (familyId) {
+      list = await db
+        .select()
+        .from(achievements)
+        .where(and(
+          eq(achievements.isActive, true),
+          eq(achievements.familyId, parseInt(familyId))
+        ));
+    } else {
+      list = await db
+        .select()
+        .from(achievements)
+        .where(eq(achievements.isActive, true));
+    }
+    
+    // 只导出必要的字段，不包含 id 和 familyId
+    const exportData = list.map(item => ({
+      name: item.name,
+      description: item.description,
+      iconUrl: item.iconUrl,
+      conditionType: item.conditionType,
+      conditionValue: item.conditionValue,
+      conditionUnit: item.conditionUnit,
+      rewardPoints: item.rewardPoints,
+    }));
+    
+    return c.json({
+      version: '1.0',
+      exportDate: new Date().toISOString(),
+      achievements: exportData,
+    });
+  } catch (error) {
+    console.error('Export achievements error:', error);
+    return c.json({ error: 'Failed to export achievements' }, 500);
+  }
+});
+
+// 导入成就配置
+achievementRoutes.post('/import', async (c) => {
+  const db = drizzle(c.env.DB);
+  
+  try {
+    const { achievements: importAchievements, familyId } = await c.req.json();
+    
+    if (!Array.isArray(importAchievements) || importAchievements.length === 0) {
+      return c.json({ error: 'Invalid import data' }, 400);
+    }
+    
+    let importedCount = 0;
+    const errors: string[] = [];
+    
+    for (const item of importAchievements) {
+      try {
+        // 验证必填字段
+        if (!item.name || !item.conditionType || !item.conditionValue) {
+          errors.push(`成就 "${item.name || '未命名'}" 缺少必填字段`);
+          continue;
+        }
+        
+        // 检查是否已存在同名成就
+        const existing = await db
+          .select()
+          .from(achievements)
+          .where(and(
+            eq(achievements.name, item.name),
+            eq(achievements.familyId, familyId),
+            eq(achievements.isActive, true)
+          ))
+          .get();
+        
+        if (existing) {
+          errors.push(`成就 "${item.name}" 已存在，跳过`);
+          continue;
+        }
+        
+        await db.insert(achievements).values({
+          familyId: familyId,
+          name: item.name,
+          description: item.description || null,
+          iconUrl: item.iconUrl || '🏆',
+          conditionType: item.conditionType,
+          conditionValue: item.conditionValue,
+          conditionUnit: item.conditionUnit || null,
+          rewardPoints: item.rewardPoints || 0,
+          isTemplate: false,
+          isActive: true,
+        });
+        
+        importedCount++;
+      } catch (itemError) {
+        errors.push(`导入 "${item.name || '未命名'}" 失败: ${itemError}`);
+      }
+    }
+    
+    return c.json({
+      success: true,
+      importedCount,
+      errors: errors.length > 0 ? errors : undefined,
+    });
+  } catch (error) {
+    console.error('Import achievements error:', error);
+    return c.json({ error: 'Failed to import achievements' }, 500);
   }
 });
 

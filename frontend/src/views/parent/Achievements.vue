@@ -37,12 +37,32 @@
       <div class="bg-white rounded-2xl shadow-sm p-6 mb-8">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-lg font-bold text-gray-800">成就列表</h2>
-          <button
-            @click="showAddModal = true"
-            class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-          >
-            添加自定义成就
-          </button>
+          <div class="flex items-center gap-2">
+            <button
+              @click="exportAchievements"
+              class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              导出
+            </button>
+            <button
+              @click="showImportModal = true"
+              class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              导入
+            </button>
+            <button
+              @click="showAddModal = true"
+              class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              添加自定义成就
+            </button>
+          </div>
         </div>
 
         <div v-if="achievements.length === 0" class="text-center py-8 text-gray-500">
@@ -341,13 +361,66 @@
         </form>
       </div>
     </div>
+
+    <!-- 导入成就弹窗 -->
+    <div v-if="showImportModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div class="bg-white rounded-2xl p-6 w-full max-w-md">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">导入成就配置</h3>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">选择 JSON 文件</label>
+            <input
+              type="file"
+              accept=".json"
+              @change="onFileChange"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
+            <p class="text-xs text-gray-500 mt-1">支持从其他家庭导出的成就配置文件</p>
+          </div>
+
+          <div v-if="importPreview" class="bg-gray-50 rounded-lg p-4">
+            <p class="text-sm font-medium text-gray-700 mb-2">预览 ({{ importPreview.achievements?.length || 0 }} 条成就)</p>
+            <div class="max-h-40 overflow-y-auto space-y-2">
+              <div
+                v-for="(item, index) in importPreview.achievements?.slice(0, 5)"
+                :key="index"
+                class="text-sm text-gray-600 flex items-center gap-2"
+              >
+                <span>{{ item.iconUrl || '🏆' }}</span>
+                <span>{{ item.name }}</span>
+              </div>
+              <p v-if="(importPreview.achievements?.length || 0) > 5" class="text-xs text-gray-400">
+                还有 {{ importPreview.achievements.length - 5 }} 条...
+              </p>
+            </div>
+          </div>
+
+          <div class="flex space-x-3 pt-4">
+            <button
+              type="button"
+              @click="showImportModal = false; importFile = null; importPreview = null"
+              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              取消
+            </button>
+            <button
+              @click="confirmImport"
+              :disabled="!importPreview || importLoading"
+              class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {{ importLoading ? '导入中...' : '确认导入' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useAuthStore } from '@/stores/auth';
-import { achievementApi, familyApi } from '@/api';
+import { achievementApi, familyApi, achievementConfigApi } from '@/api';
 
 const authStore = useAuthStore();
 
@@ -358,8 +431,12 @@ const showAddModal = ref(false);
 const showAssignModal = ref(false);
 const showRevokeModal = ref(false);
 const showRevoked = ref(false);
+const showImportModal = ref(false);
 const selectedAchievement = ref<any>(null);
 const selectedRecord = ref<any>(null);
+const importFile = ref<File | null>(null);
+const importPreview = ref<any>(null);
+const importLoading = ref(false);
 
 const commonIcons = ['🏆', '🥇', '🥈', '🥉', '⭐', '💫', '🌟', '✨', '🎯', '🎖️', '🏅', '🌈', '🔥', '💪', '📚'];
 
@@ -547,6 +624,80 @@ const restoreAchievement = async (record: any) => {
 
 const formatDate = (date: string) => {
   return new Date(date).toLocaleDateString('zh-CN');
+};
+
+// 导出成就
+const exportAchievements = async () => {
+  try {
+    const response = await achievementConfigApi.exportAchievements(authStore.user?.familyId);
+    const blob = new Blob([JSON.stringify(response, null, 2)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `achievements-${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    alert('导出成功！');
+  } catch (error) {
+    console.error('导出失败:', error);
+    alert('导出失败');
+  }
+};
+
+// 文件选择处理
+const onFileChange = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (target.files && target.files[0]) {
+    importFile.value = target.files[0];
+    previewImportFile();
+  }
+};
+
+// 预览导入文件
+const previewImportFile = () => {
+  if (!importFile.value) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const content = JSON.parse(e.target?.result as string);
+      importPreview.value = content;
+    } catch (error) {
+      alert('文件格式错误，请上传有效的JSON文件');
+      importFile.value = null;
+      importPreview.value = null;
+    }
+  };
+  reader.readAsText(importFile.value);
+};
+
+// 确认导入
+const confirmImport = async () => {
+  if (!importPreview.value) return;
+
+  importLoading.value = true;
+  try {
+    const res = await achievementConfigApi.importAchievements({
+      achievements: importPreview.value.achievements || [],
+      familyId: authStore.user?.familyId || 0,
+    });
+    if (res.success) {
+      alert(`成功导入 ${res.importedCount} 条成就`);
+      showImportModal.value = false;
+      importFile.value = null;
+      importPreview.value = null;
+      fetchAchievements();
+    } else {
+      alert(res.error || '导入失败');
+    }
+  } catch (error) {
+    console.error('导入失败:', error);
+    alert('导入失败');
+  } finally {
+    importLoading.value = false;
+  }
 };
 
 onMounted(() => {

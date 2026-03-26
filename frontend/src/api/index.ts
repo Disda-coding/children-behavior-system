@@ -324,4 +324,12 @@ export const uploadApi = {
   getFileUrl: (key: string) => `${api.defaults.baseURL}/api/upload/ppt/file/${encodeURIComponent(key)}`,
 };
 
+// 成就配置导出导入 API
+export const achievementConfigApi = {
+  exportAchievements: (familyId?: number) =>
+    api.get('/api/achievements/export', { params: { familyId } }) as Promise<any>,
+  importAchievements: (data: { achievements: any[]; familyId: number }) =>
+    api.post('/api/achievements/import', data) as Promise<any>,
+};
+
 export default api;
