@@ -205,63 +205,72 @@ const fetchUserAchievements = async (showLoading = false) => {
   if (showLoading) {
     isUpdating.value = true;
   }
-  
+
   try {
-    if (authStore.user?.id) {
-      // 获取最新数据（包含已撤销的，以便完整显示）
-      const response = await achievementApi.getUserAchievements(authStore.user.id, true) as { userAchievements: any[] };
-      const newAchievements = response.userAchievements || [];
-      
-      // 首次加载，只记录已完成的成就ID，不触发动画
-      if (isFirstLoad.value) {
-        previousCompletedIds.value = new Set(
-          newAchievements.filter(a => a.isCompleted).map(a => a.id)
-        );
-        isFirstLoad.value = false;
-        console.log('首次加载，已记录完成成就:', previousCompletedIds.value);
-      } else {
-        // 非首次加载，检测新完成的成就
-        const currentCompletedIds = new Set(
-          newAchievements.filter(a => a.isCompleted).map(a => a.id)
-        );
-        
-        // 找出新完成的成就（当前完成但之前未记录）
-        const newCompletedIds: number[] = [];
-        currentCompletedIds.forEach(id => {
-          if (!previousCompletedIds.value.has(id)) {
-            newCompletedIds.push(id);
-          }
-        });
-        
-        console.log('检测到新完成成就:', newCompletedIds);
-        
-        if (newCompletedIds.length > 0) {
-          // 获取新成就的详细信息
-          const newAchievementsList = newAchievements.filter(a => newCompletedIds.includes(a.id));
-          
-          // 显示第一个新成就的动画
-          const firstNewAchievement = newAchievementsList[0];
-          if (firstNewAchievement) {
-            console.log('显示动画:', firstNewAchievement.achievement?.name);
-            showAchievementUnlock(firstNewAchievement);
-            
-            // 添加到新完成列表（用于显示NEW标记）
-            newCompletedIds.forEach(id => newlyCompletedIds.value.add(id));
-            
-            // 5秒后清除NEW标记
-            setTimeout(() => {
-              newCompletedIds.forEach(id => newlyCompletedIds.value.delete(id));
-            }, 5000);
-          }
-          
-          // 更新已记录的完成成就ID
-          previousCompletedIds.value = currentCompletedIds;
-        }
-      }
-      
-      userAchievements.value = newAchievements;
-      lastUpdateTime.value = new Date();
+    const userId = authStore.user?.id;
+    if (!userId) {
+      console.warn('用户未登录，无法获取成就');
+      return;
     }
+
+    console.log('正在获取用户成就，用户ID:', userId);
+
+    // 获取最新数据（包含已撤销的，以便完整显示）
+    const response = await achievementApi.getUserAchievements(userId, true) as any;
+    console.log('API 响应:', response);
+
+    const newAchievements = response.userAchievements || [];
+    console.log('获取到成就数量:', newAchievements.length);
+
+    // 首次加载，只记录已完成的成就ID，不触发动画
+    if (isFirstLoad.value) {
+      previousCompletedIds.value = new Set<number>(
+        newAchievements.filter((a: any) => a.isCompleted).map((a: any) => a.id)
+      );
+      isFirstLoad.value = false;
+      console.log('首次加载，已记录完成成就:', previousCompletedIds.value);
+    } else {
+      // 非首次加载，检测新完成的成就
+      const currentCompletedIds = new Set<number>(
+        newAchievements.filter((a: any) => a.isCompleted).map((a: any) => a.id)
+      );
+
+      // 找出新完成的成就（当前完成但之前未记录）
+      const newCompletedIds: number[] = [];
+      currentCompletedIds.forEach((id: number) => {
+        if (!previousCompletedIds.value.has(id)) {
+          newCompletedIds.push(id);
+        }
+      });
+
+      console.log('检测到新完成成就:', newCompletedIds);
+
+      if (newCompletedIds.length > 0) {
+        // 获取新成就的详细信息
+        const newAchievementsList = newAchievements.filter((a: any) => newCompletedIds.includes(a.id));
+
+        // 显示第一个新成就的动画
+        const firstNewAchievement = newAchievementsList[0];
+        if (firstNewAchievement) {
+          console.log('显示动画:', firstNewAchievement.achievement?.name);
+          showAchievementUnlock(firstNewAchievement);
+
+          // 添加到新完成列表（用于显示NEW标记）
+          newCompletedIds.forEach(id => newlyCompletedIds.value.add(id));
+
+          // 5秒后清除NEW标记
+          setTimeout(() => {
+            newCompletedIds.forEach(id => newlyCompletedIds.value.delete(id));
+          }, 5000);
+        }
+
+        // 更新已记录的完成成就ID
+        previousCompletedIds.value = currentCompletedIds;
+      }
+    }
+
+    userAchievements.value = newAchievements;
+    lastUpdateTime.value = new Date();
   } catch (error) {
     console.error('Failed to fetch achievements:', error);
   } finally {
