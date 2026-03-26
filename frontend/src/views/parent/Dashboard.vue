@@ -295,8 +295,10 @@ const fetchFamilyData = async () => {
       if (member.role === 'child') {
         try {
           const pointsRes = await pointApi.getStats({ userId: member.id }) as any;
-          totalPoints += pointsRes.balance || 0;
-          member.points = pointsRes.balance || 0;
+          // 修复：后端返回的数据结构是 { stats: { totalBalance, ... } }
+          const balance = pointsRes.stats?.totalBalance || 0;
+          totalPoints += balance;
+          member.points = balance;
         } catch (e) {
           console.error('Failed to fetch points for member:', member.id);
         }

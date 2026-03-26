@@ -250,9 +250,11 @@ const fetchPoints = async () => {
     if (!userId) return;
 
     const statsRes = await pointApi.getStats({ userId }) as any;
-    points.value = statsRes.balance || 0;
-    todayPoints.value = statsRes.todayEarned || 0;
-    weekPoints.value = statsRes.weekEarned || 0;
+    // 修复：后端返回的数据结构是 { stats: { totalBalance, todayEarned, weekEarned, ... } }
+    const stats = statsRes.stats || {};
+    points.value = stats.totalBalance || 0;
+    todayPoints.value = stats.todayEarned || 0;
+    weekPoints.value = stats.weekEarned || 0;
 
     const recordsRes = await pointApi.getRecords({ userId }) as any;
     recentRecords.value = (recordsRes.records || []).slice(0, 10);
