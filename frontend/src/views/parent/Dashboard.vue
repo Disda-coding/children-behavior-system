@@ -294,7 +294,7 @@ const fetchFamilyData = async () => {
     for (const member of members.value) {
       if (member.role === 'child') {
         try {
-          const pointsRes = await pointApi.getPointStats(member.id) as any;
+          const pointsRes = await pointApi.getStats({ userId: member.id }) as any;
           totalPoints += pointsRes.balance || 0;
           member.points = pointsRes.balance || 0;
         } catch (e) {
@@ -309,7 +309,7 @@ const fetchFamilyData = async () => {
     for (const member of members.value) {
       if (member.role === 'child') {
         try {
-          const recordsRes = await pointApi.getPointRecords(member.id) as any;
+          const recordsRes = await pointApi.getRecords({ userId: member.id }) as any;
           todayCount += (recordsRes.records || []).filter((r: any) => 
             r.createdAt?.startsWith(today)
           ).length;
@@ -321,7 +321,7 @@ const fetchFamilyData = async () => {
     stats.value.todayRecords = todayCount;
 
     try {
-      const achievementsRes = await achievementApi.getAllUserAchievements(familyId) as any;
+      const achievementsRes = await achievementApi.getFamilyChildrenAchievements(familyId) as any;
       stats.value.achievements = (achievementsRes.userAchievements || []).filter(
         (a: any) => !a.isRevoked
       ).length;

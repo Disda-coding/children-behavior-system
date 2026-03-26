@@ -385,7 +385,7 @@ const fetchActionTypes = async () => {
 
 const fetchStats = async () => {
   try {
-    const res = await logApi.getLogStats({ days: '7' });
+    const res = await logApi.getLogStats({ days: 7 });
     if (res.success) {
       const { actionStats, dailyStats } = res.data;
       stats.value.total = actionStats.reduce((sum: number, item: any) => sum + item.count, 0);

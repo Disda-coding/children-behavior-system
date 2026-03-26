@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
     <Transition name="fade-scale">
-      <div v-if="show" class="achievement-unlock-overlay" @click="close">
+      <div v-if="shouldShow" class="achievement-unlock-overlay" @click="close">
         <!-- 背景光环 -->
         <div class="glow-rings">
           <div class="ring ring-1"></div>
@@ -51,7 +51,7 @@
 
               <!-- 徽章背景 -->
               <div class="badge-bg">
-                <div class="badge-icon">{{ achievement?.iconUrl || '🏆' }}</div>
+                <div class="badge-icon">{{ currentAchievement?.icon || currentAchievement?.iconUrl || '🏆' }}</div>
               </div>
 
               <!-- 星星装饰 -->
@@ -64,11 +64,11 @@
           <!-- 文字内容 -->
           <div class="text-content" :class="{ 'animate': isAnimating }">
             <h2 class="unlock-title">恭喜获得成就！</h2>
-            <h3 class="achievement-name">{{ achievement?.name }}</h3>
-            <p class="achievement-description">{{ achievement?.description }}</p>
-            <div v-if="achievement?.rewardPoints" class="reward-points">
+            <h3 class="achievement-name">{{ currentAchievement?.name }}</h3>
+            <p class="achievement-description">{{ currentAchievement?.description }}</p>
+            <div v-if="currentAchievement?.rewardPoints" class="reward-points">
               <span class="points-icon">💎</span>
-              <span class="points-value">+{{ achievement.rewardPoints }}</span>
+              <span class="points-value">+{{ currentAchievement.rewardPoints }}</span>
               <span class="points-label">积分</span>
             </div>
           </div>
@@ -94,34 +94,49 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue';
+import { ref, watch, nextTick, computed } from 'vue';
 
 interface Achievement {
-  id: number;
+  id?: number;
   name: string;
-  description: string;
+  description?: string;
+  icon?: string;
   iconUrl?: string;
   rewardPoints?: number;
 }
 
 interface Props {
-  show: boolean;
-  achievement: Achievement | null;
+  show?: boolean;
+  achievement?: Achievement | null;
+  achievements?: Achievement[];
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  show: false,
+  achievement: null,
+  achievements: () => [],
+});
+
 const emit = defineEmits<{
   (e: 'close'): void;
 }>();
 
 const isAnimating = ref(false);
 
-// 监听显示状态
-watch(() => props.show, async (newVal) => {
+const currentAchievement = computed(() => {
+  if (props.achievement) return props.achievement;
+  if (props.achievements && props.achievements.length > 0) return props.achievements[0];
+  return null;
+});
+
+const shouldShow = computed(() => {
+  return props.show || (props.achievements && props.achievements.length > 0);
+});
+
+watch(shouldShow, async (newVal) => {
   if (newVal) {
     isAnimating.value = false;
     await nextTick();
-    // 延迟触发动画，确保 DOM 已渲染
     setTimeout(() => {
       isAnimating.value = true;
     }, 50);

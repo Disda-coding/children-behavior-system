@@ -236,7 +236,7 @@ const weekPoints = ref(0);
 const achievements = ref(0);
 const rewards = ref(0);
 const meetings = ref(0);
-const avgScore = ref(0);
+const avgScore = ref<string | number>(0);
 const recentRecords = ref<any[]>([]);
 const unlockedAchievements = ref<any[]>([]);
 const previousAchievements = ref<Set<number>>(new Set());
@@ -249,12 +249,12 @@ const fetchPoints = async () => {
     const userId = authStore.user?.id;
     if (!userId) return;
 
-    const statsRes = await pointApi.getPointStats(userId) as any;
+    const statsRes = await pointApi.getStats({ userId }) as any;
     points.value = statsRes.balance || 0;
     todayPoints.value = statsRes.todayEarned || 0;
     weekPoints.value = statsRes.weekEarned || 0;
 
-    const recordsRes = await pointApi.getPointRecords(userId) as any;
+    const recordsRes = await pointApi.getRecords({ userId }) as any;
     recentRecords.value = (recordsRes.records || []).slice(0, 10);
   } catch (error) {
     console.error('Failed to fetch points:', error);
@@ -271,7 +271,7 @@ const fetchAchievements = async () => {
     achievements.value = userAchievements.filter((a: any) => !a.isRevoked).length;
 
     if (!isFirstLoad) {
-      const currentIds = new Set(userAchievements.map((a: any) => a.achievementId));
+      const currentIds = new Set<number>(userAchievements.map((a: any) => a.achievementId));
       const newUnlocked = userAchievements.filter(
         (a: any) => !previousAchievements.value.has(a.achievementId) && !a.isRevoked
       );
@@ -284,7 +284,7 @@ const fetchAchievements = async () => {
       }
       previousAchievements.value = currentIds;
     } else {
-      previousAchievements.value = new Set(userAchievements.map((a: any) => a.achievementId));
+      previousAchievements.value = new Set<number>(userAchievements.map((a: any) => a.achievementId));
       isFirstLoad = false;
     }
   } catch (error) {

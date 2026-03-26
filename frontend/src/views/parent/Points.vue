@@ -321,7 +321,12 @@ const importFile = ref<File | null>(null);
 const importPreview = ref<any>(null);
 const importLoading = ref(false);
 
-const newRule = ref({
+const newRule = ref<{
+  name: string;
+  description: string;
+  type: 'earn' | 'deduct';
+  points: number;
+}>({
   name: '',
   description: '',
   type: 'earn',
@@ -336,7 +341,7 @@ const quickRecord = ref({
 
 const fetchRules = async () => {
   try {
-    const res = await pointApi.getPointRules() as any;
+    const res = await pointApi.getRules() as any;
     rules.value = res.rules || [];
   } catch (error) {
     console.error('Failed to fetch rules:', error);
@@ -345,10 +350,7 @@ const fetchRules = async () => {
 
 const fetchRecords = async () => {
   try {
-    const familyId = authStore.user?.familyId;
-    if (!familyId) return;
-
-    const res = await pointApi.getPointRecords() as any;
+    const res = await pointApi.getRecords() as any;
     records.value = (res.records || []).slice(0, 20);
   } catch (error) {
     console.error('Failed to fetch records:', error);
@@ -372,7 +374,7 @@ const addRule = async () => {
     const familyId = authStore.user?.familyId;
     if (!familyId) return;
 
-    await pointApi.createPointRule({
+    await pointApi.createRule({
       familyId,
       ...newRule.value,
     });
@@ -390,7 +392,7 @@ const deleteRule = async (id: number) => {
   if (!confirm('确定要删除这个规则吗？')) return;
 
   try {
-    await pointApi.deletePointRule(id);
+    await pointApi.deleteRule(id);
     fetchRules();
   } catch (error) {
     console.error('Failed to delete rule:', error);
@@ -405,7 +407,7 @@ const quickAddRecord = async () => {
     const rule = rules.value.find(r => r.id === quickRecord.value.ruleId);
     if (!rule) return;
 
-    await pointApi.createPointRecord({
+    await pointApi.createRecord({
       userId: quickRecord.value.userId,
       type: rule.type,
       amount: rule.points,
