@@ -2,7 +2,10 @@ import axios from 'axios';
 
 // 创建 axios 实例
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8787',
+  baseURL:
+    import.meta.env.VITE_API_BASE_URL ||
+    import.meta.env.VITE_API_URL ||
+    'http://localhost:8787',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -116,10 +119,19 @@ export const achievementApi = {
     rewardPoints?: number;
     isTemplate?: boolean;
   }) => api.post('/api/achievements', data) as Promise<any>,
-  getUserAchievements: (userId: number) =>
-    api.get(`/api/achievements/user/${userId}`) as Promise<any>,
+  getUserAchievements: (userId: number, includeRevoked?: boolean) =>
+    api.get(`/api/achievements/user/${userId}`, { params: { includeRevoked } }) as Promise<any>,
   assignAchievement: (id: number, data: { userId: number; note?: string }) =>
     api.post(`/api/achievements/${id}/assign`, data) as Promise<any>,
+  // 撤销成就
+  revokeAchievement: (userAchievementId: number, data: { revokedBy: number; reason?: string }) =>
+    api.post(`/api/achievements/user-achievements/${userAchievementId}/revoke`, data) as Promise<any>,
+  // 恢复已撤销的成就
+  restoreAchievement: (userAchievementId: number, data: { restoredBy: number }) =>
+    api.post(`/api/achievements/user-achievements/${userAchievementId}/restore`, data) as Promise<any>,
+  // 获取家庭所有孩子的成就（包含撤销记录）
+  getFamilyChildrenAchievements: (familyId: number) =>
+    api.get(`/api/achievements/family/${familyId}/children-achievements`) as Promise<any>,
 };
 
 // 奖励相关 API
@@ -136,33 +148,57 @@ export const rewardApi = {
     stock?: number;
     config?: Record<string, any>;
   }) => api.post('/api/rewards', data) as Promise<any>,
+  updateReward: (id: number, data: {
+    name?: string;
+    description?: string;
+    type?: 'physical' | 'virtual' | 'activity' | 'cash';
+    pointsCost?: number;
+    iconUrl?: string;
+    stock?: number;
+    config?: Record<string, any>;
+    isActive?: boolean;
+  }) => api.put(`/api/rewards/${id}`, data) as Promise<any>,
+  deleteReward: (id: number) => api.delete(`/api/rewards/${id}`) as Promise<any>,
   redeemReward: (
     id: number,
     data: { userId: number; hours?: number; note?: string }
   ) => api.post(`/api/rewards/${id}/redeem`, data) as Promise<any>,
-  getRedemptions: (params?: { userId?: number }) =>
+  getRedemptions: (params?: { userId?: number; familyId?: number; status?: string }) =>
     api.get('/api/rewards/redemptions', { params }) as Promise<any>,
+  approveRedemption: (id: number, data: { approvedBy: number; note?: string }) =>
+    api.put(`/api/rewards/redemptions/${id}/approve`, data) as Promise<any>,
+  rejectRedemption: (id: number, data: { approvedBy: number; note?: string }) =>
+    api.put(`/api/rewards/redemptions/${id}/reject`, data) as Promise<any>,
+  completeRedemption: (id: number, data: { approvedBy: number; note?: string }) =>
+    api.put(`/api/rewards/redemptions/${id}/complete`, data) as Promise<any>,
+  getGameTimeHistory: (params: { userId: number; rewardId: number }) =>
+    api.get('/api/rewards/game-time-history', { params }) as Promise<any>,
 };
 
 // 申诉相关 API
 export const appealApi = {
-  getAppeals: (params?: { userId?: number; status?: string }) =>
+  getAppeals: (params?: { userId?: number; familyId?: number; status?: string }) =>
     api.get('/api/appeals', { params }) as Promise<any>,
+  getAppealStats: (params?: { familyId?: number }) =>
+    api.get('/api/appeals/stats', { params }) as Promise<any>,
   createAppeal: (data: {
     userId: number;
     pointRecordId: number;
     reason: string;
   }) => api.post('/api/appeals', data) as Promise<any>,
-  updateAppeal: (
-    id: number,
-    data: { status: 'approved' | 'rejected'; response?: string; handledBy?: number }
-  ) => api.put(`/api/appeals/${id}`, data) as Promise<any>,
+  approveAppeal: (id: number, data: { handledBy: number; response?: string }) =>
+    api.put(`/api/appeals/${id}/approve`, data) as Promise<any>,
+  rejectAppeal: (id: number, data: { handledBy: number; response?: string }) =>
+    api.put(`/api/appeals/${id}/reject`, data) as Promise<any>,
+  deleteAppeal: (id: number) => api.delete(`/api/appeals/${id}`) as Promise<any>,
 };
 
 // 会议相关 API
 export const meetingApi = {
   getMeetings: (params?: { familyId?: number; childId?: number }) =>
     api.get('/api/meetings', { params }) as Promise<any>,
+  getMeetingStats: (params?: { familyId?: number; childId?: number }) =>
+    api.get('/api/meetings/stats', { params }) as Promise<any>,
   createMeeting: (data: {
     familyId: number;
     childId: number;
@@ -181,10 +217,34 @@ export const meetingApi = {
       scheduledAt?: string;
     }
   ) => api.put(`/api/meetings/${id}`, data) as Promise<any>,
+  // 安排会议时间
+  scheduleMeeting: (
+    id: number,
+    data: { scheduledAt: string; scheduledBy: number }
+  ) => api.post(`/api/meetings/${id}/schedule`, data) as Promise<any>,
+  // 取消会议
+  cancelMeeting: (
+    id: number,
+    data: { cancelledBy: number; reason?: string }
+  ) => api.post(`/api/meetings/${id}/cancel`, data) as Promise<any>,
+  // 评分会议
   scoreMeeting: (
     id: number,
     data: { score: number; scoreNote?: string }
   ) => api.post(`/api/meetings/${id}/score`, data) as Promise<any>,
+  // 删除会议
+  deleteMeeting: (id: number) => api.delete(`/api/meetings/${id}`) as Promise<any>,
+};
+
+// 通知相关 API
+export const notificationApi = {
+  getNotifications: (params?: { unreadOnly?: boolean; limit?: number; offset?: number }) =>
+    api.get('/api/notifications', { params }) as Promise<any>,
+  getUnreadCount: () => api.get('/api/notifications/unread-count') as Promise<any>,
+  markAsRead: (id: number) => api.put(`/api/notifications/${id}/read`) as Promise<any>,
+  markAllAsRead: () => api.put('/api/notifications/read-all') as Promise<any>,
+  deleteNotification: (id: number) => api.delete(`/api/notifications/${id}`) as Promise<any>,
+  deleteReadNotifications: () => api.delete('/api/notifications/read') as Promise<any>,
 };
 
 // 统计相关 API
@@ -195,6 +255,46 @@ export const statsApi = {
     api.get('/api/stats/achievements', { params }) as Promise<any>,
   exportData: (params: { type: string; familyId?: number }) =>
     api.get('/api/stats/export', { params }) as Promise<any>,
+};
+
+// 日志相关 API
+export const logApi = {
+  getLogs: (params?: { userId?: number; action?: string; entityType?: string; startDate?: string; endDate?: string; search?: string; limit?: number; offset?: number }) =>
+    api.get('/api/logs', { params }) as Promise<any>,
+  getLogStats: (params?: { days?: number }) =>
+    api.get('/api/logs/stats', { params }) as Promise<any>,
+  getLogActions: () =>
+    api.get('/api/logs/actions') as Promise<any>,
+  getLogDetail: (id: number) =>
+    api.get(`/api/logs/${id}`) as Promise<any>,
+  deleteLog: (id: number) =>
+    api.delete(`/api/logs/${id}`) as Promise<any>,
+  cleanupOldLogs: () =>
+    api.delete('/api/logs/cleanup/old') as Promise<any>,
+};
+
+// 积分规则导出导入 API
+export const pointRuleConfigApi = {
+  exportRules: () =>
+    api.get('/api/points/rules/export', { responseType: 'blob' }) as Promise<any>,
+  importRules: (data: any) =>
+    api.post('/api/points/rules/import', data) as Promise<any>,
+};
+
+// 备份相关 API
+export const backupApi = {
+  getBackups: (params?: { type?: string; limit?: number; offset?: number }) =>
+    api.get('/api/backups', { params }) as Promise<any>,
+  getBackupStats: () =>
+    api.get('/api/backups/stats/overview') as Promise<any>,
+  createBackup: (data: { name: string; description?: string }) =>
+    api.post('/api/backups', data) as Promise<any>,
+  downloadBackup: (id: number) =>
+    api.get(`/api/backups/${id}/download`, { responseType: 'blob' }) as Promise<any>,
+  restoreBackup: (id: number) =>
+    api.post(`/api/backups/${id}/restore`) as Promise<any>,
+  deleteBackup: (id: number) =>
+    api.delete(`/api/backups/${id}`) as Promise<any>,
 };
 
 // 文件上传 API

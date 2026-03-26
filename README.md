@@ -1,8 +1,35 @@
 # 儿童行为管理与激励系统
 
-一个部署在 Cloudflare 平台的儿童行为管理与激励系统，通过积分、成就、奖励兑换和数据统计等机制，帮助家长管理孩子的日常行为。
+<p align="center">
+  <img src="https://img.shields.io/badge/Vue-3.4+-green.svg" alt="Vue 3">
+  <img src="https://img.shields.io/badge/TypeScript-5.0+-blue.svg" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Hono-4.0+-orange.svg" alt="Hono">
+  <img src="https://img.shields.io/badge/Cloudflare-Workers-purple.svg" alt="Cloudflare">
+  <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
+</p>
 
-## 系统架构
+<p align="center">
+  一个基于积分、成就、奖励兑换的儿童行为管理与激励系统
+</p>
+
+---
+
+## 📖 项目简介
+
+儿童行为管理与激励系统是一个帮助家长管理和激励孩子日常行为的 Web 应用。通过积分奖励机制、成就系统和奖励兑换，让孩子养成良好的行为习惯，同时增加亲子互动乐趣。
+
+### ✨ 核心功能
+
+- **🎯 积分系统**: 完成任务获得积分，不良行为扣除积分
+- **🏆 成就系统**: 达成目标解锁成就，Apple Watch 风格动画展示
+- **🎁 奖励兑换**: 用积分兑换游戏时间、零花钱、实物奖励等
+- **📊 数据统计**: 行为数据可视化，了解孩子成长轨迹
+- **🗣️ 申诉系统**: 孩子对扣分有异议可以申诉
+- **👨‍👩‍👧‍👦 家庭会议**: 定期会议讨论和评分
+
+---
+
+## 🏗️ 系统架构
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -12,16 +39,17 @@
 │  │   前端      │    │   后端      │    │      数据库         │  │
 │  │  (Pages)    │◄──►│ (Workers)   │◄──►│   (D1 SQLite)       │  │
 │  │             │    │             │    │                     │  │
-│  │ • 用户端    │    │ • REST API  │    │ • 用户信息          │  │
-│  │ • 管理端    │    │ • 业务逻辑  │    │ • 积分记录          │  │
-│  │             │    │ • 认证授权  │    │ • 成就数据          │  │
+│  │ • Vue 3     │    │ • Hono      │    │ • 用户信息          │  │
+│  │ • Tailwind  │    │ • REST API  │    │ • 积分记录          │  │
+│  │ • Pinia     │    │ • JWT Auth  │    │ • 成就数据          │  │
 │  │             │    │             │    │ • 奖励规则          │  │
-│  │             │    │             │    │ • 行为记录          │  │
 │  └─────────────┘    └─────────────┘    └─────────────────────┘  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## 技术栈
+---
+
+## 🛠️ 技术栈
 
 ### 前端
 - **框架**: Vue 3 + TypeScript
@@ -30,59 +58,96 @@
 - **状态管理**: Pinia
 - **路由**: Vue Router
 - **HTTP 客户端**: Axios
-- **动画库**: GSAP
-- **图表库**: Chart.js
 
 ### 后端
 - **运行环境**: Cloudflare Workers
-- **框架**: Hono
+- **框架**: Hono (轻量级、高性能)
 - **数据库**: Cloudflare D1 (SQLite)
 - **ORM**: Drizzle ORM
 - **认证**: JWT
-- **API 风格**: RESTful
 
-### 部署工具
+### 部署
+- **平台**: Cloudflare (Pages + Workers + D1)
 - **CLI**: Wrangler
 
-## 项目结构
+---
+
+## 📁 项目结构
 
 ```
 children-behavior-system/
-├── frontend/                          # 前端项目
+├── frontend/                    # 前端项目
 │   ├── src/
-│   │   ├── components/                # 公共组件
-│   │   ├── views/                     # 页面视图
-│   │   │   ├── child/                 # 儿童端页面
-│   │   │   └── parent/                # 家长端页面
-│   │   ├── stores/                    # Pinia 状态管理
-│   │   ├── router/                    # 路由配置
-│   │   ├── api/                       # API 接口
-│   │   └── assets/                    # 静态资源
+│   │   ├── components/          # 公共组件
+│   │   │   ├── common/          # 通用组件
+│   │   │   │   ├── FlipNumber.vue         # 积分翻页动画
+│   │   │   │   ├── AchievementBadge.vue   # 成就徽章
+│   │   │   │   └── AchievementUnlockAnimation.vue  # 成就解锁动画
+│   │   │   ├── child/           # 儿童端组件
+│   │   │   └── parent/          # 家长端组件
+│   │   ├── views/               # 页面视图
+│   │   │   ├── child/           # 儿童端页面
+│   │   │   │   ├── Dashboard.vue          # 积分展示首页
+│   │   │   │   ├── Achievements.vue       # 成就系统
+│   │   │   │   ├── Rewards.vue            # 奖励兑换
+│   │   │   │   ├── Appeal.vue             # 申诉系统
+│   │   │   │   └── Meeting.vue            # 会议系统
+│   │   │   └── parent/          # 家长端页面
+│   │   │       ├── Dashboard.vue          # 管理首页
+│   │   │       ├── Achievements.vue       # 成就管理
+│   │   │       ├── Points.vue             # 积分规则管理
+│   │   │       ├── Rewards.vue            # 奖励管理
+│   │   │       ├── Statistics.vue         # 数据统计
+│   │   │       ├── Appeals.vue            # 申诉审核
+│   │   │       └── Meetings.vue           # 会议管理
+│   │   ├── stores/              # Pinia 状态管理
+│   │   ├── router/              # 路由配置
+│   │   ├── api/                 # API 接口
+│   │   └── assets/              # 静态资源
+│   ├── public/
 │   └── package.json
 │
-├── backend/                           # 后端项目
+├── backend/                     # 后端项目
 │   ├── src/
-│   │   ├── routes/                    # 路由定义
-│   │   ├── db/                        # 数据库相关
-│   │   └── index.ts                   # 入口文件
-│   ├── wrangler.toml                  # Wrangler 配置
+│   │   ├── routes/              # 路由定义
+│   │   │   ├── auth.ts          # 认证路由
+│   │   │   ├── points.ts        # 积分路由
+│   │   │   ├── achievements.ts  # 成就路由
+│   │   │   ├── rewards.ts       # 奖励路由
+│   │   │   ├── appeals.ts       # 申诉路由
+│   │   │   ├── meetings.ts      # 会议路由
+│   │   │   └── families.ts      # 家庭路由
+│   │   ├── db/                  # 数据库相关
+│   │   │   ├── schema.ts        # 数据库表结构
+│   │   │   └── migrations/      # 数据库迁移文件
+│   │   └── index.ts             # 入口文件
+│   ├── wrangler.toml            # Wrangler 配置
 │   └── package.json
 │
-├── shared/                            # 共享类型定义
-│   └── types/
+├── doc/                         # 文档
+│   ├── prd/                     # 产品需求文档
+│   ├── api/                     # API 文档
+│   └── deploy/                  # 部署文档
 │
-└── doc/                               # 文档
-    ├── prd/                           # 产品需求文档
-    ├── api/                           # API 文档
-    └── deploy/                        # 部署文档
+├── README.md                    # 项目说明
+├── DEPLOY.md                    # 部署指南
+└── PROGRESS.md                  # 项目进展
 ```
 
-## 快速开始
+---
+
+## 🚀 快速开始
+
+### 环境要求
+
+- Node.js 18+
+- npm 或 yarn
+- Cloudflare 账号
 
 ### 1. 克隆项目
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/yourusername/children-behavior-system.git
 cd children-behavior-system
 ```
 
@@ -100,178 +165,126 @@ npm install
 
 ### 3. 配置环境变量
 
-#### 前端
-创建 `frontend/.env` 文件：
-```env
-VITE_API_URL=http://localhost:8787
+后端配置 `backend/.dev.vars`:
+```
+JWT_SECRET=your-secret-key
 ```
 
-#### 后端
-编辑 `backend/wrangler.toml` 文件，配置数据库信息：
-```toml
-[[d1_databases]]
-binding = "DB"
-database_name = "children-behavior-db"
-database_id = "your-database-id"
+前端配置 `frontend/.env.development`:
+```
+VITE_API_BASE_URL=http://localhost:8787
 ```
 
-### 4. 本地开发
+### 4. 启动开发服务器
 
-#### 启动后端服务
 ```bash
-cd backend
+# 启动后端（在 backend 目录）
+npm run dev
+
+# 启动前端（在 frontend 目录）
 npm run dev
 ```
 
-#### 启动前端服务
-```bash
-cd frontend
-npm run dev
-```
+访问 http://localhost:5173 查看应用
 
-### 5. 部署
+---
 
-#### 部署后端
-```bash
-cd backend
-wrangler deploy
-```
+## 📸 功能截图
 
-#### 部署前端
-```bash
-cd frontend
-npm run build
-wrangler pages deploy dist
-```
-
-## 数据库迁移
-
-### 创建数据库
-```bash
-wrangler d1 create children-behavior-db
-```
-
-### 执行迁移
-```bash
-wrangler d1 migrations apply children-behavior-db
-```
-
-## 功能特性
-
-### 用户端（小孩端）
-- 📊 积分展示（今日、本周、总积分）
-- 🏆 成就系统（支持连续型、次数型、累积型）
-- 🎁 奖励兑换（实物、虚拟、活动、现金）
-- 📝 申诉系统
-- 🗣️ 家庭会议（PPT 展示与评分）
-
-### 管理端（家长端）
-- 👨‍👩‍👧‍👦 家庭成员管理
-- 📋 积分规则管理
-- 🏅 成就模板管理
-- 🎁 奖励兑换管理
-- 📈 数据统计与图表
-- ✅ 申诉审核
-- 📅 会议管理
-
-## 核心功能
-
-### 积分系统
-- 支持积分赚取和扣除
-- 积分规则可配置
-- 积分历史记录
-- 积分统计图表
+### 儿童端首页
+- 实时积分展示（翻页动画）
+- 最近动态
+- 快捷入口
 
 ### 成就系统
-- 连续型成就（连续7天、21天、365天）
-- 次数型成就（完成50次家务）
-- 累积型成就（学习100小时）
-- 成就模板机制
-- 成就获得动画
+- 成就列表展示
+- 进度追踪
+- Apple Watch 风格解锁动画
 
-### 奖励系统
-- 实物奖励（小礼物、玩具、书籍）
-- 虚拟奖励（电子游戏时长）
-- 活动奖励（去公园、外出活动）
-- 现金奖励
-- 阶梯价格机制（游戏时间兑换）
+### 奖励兑换
+- 奖励展示
+- 积分兑换
+- 兑换历史
 
-### 申诉与会议
-- 积分申诉机制
-- 家庭会议申请
-- PPT 上传与展示
-- 会议评分系统
+### 家长端管理
+- 积分规则设置
+- 成就管理
+- 数据统计
 
-## 安全特性
+---
 
-- JWT 身份认证
-- 密码 SHA-256 加密
-- 角色权限控制
-- API 速率限制
-- 儿童隐私保护
+## 🎯 核心特性
 
-## 部署环境
+### 1. 实时积分更新
+- 每10秒自动轮询服务器
+- 积分变化时翻页数字动画
+- 积分变化提示
 
-- **平台**: Cloudflare
-- **前端**: Cloudflare Pages
-- **后端**: Cloudflare Workers
-- **数据库**: Cloudflare D1 (SQLite)
-- **CDN**: Cloudflare CDN
+### 2. 成就解锁动画
+- Apple Watch 风格全屏动画
+- 粒子爆炸效果
+- 彩带飘落动画
+- 徽章旋转展示
 
-## 开发计划
+### 3. 成就撤销功能
+- 家长可以撤销已赋予的成就
+- 撤销时自动扣除积分
+- 可填写撤销原因
+- 支持恢复已撤销的成就
 
-### 第一阶段：基础架构 ✅
-- [x] 项目初始化
-- [x] 数据库设计
-- [x] 基础组件
-- [x] 路由配置
+### 4. 游戏时间阶梯价格
+```
+1小时   = 200积分
+1.5小时 = 400积分 (2倍)
+2小时   = 800积分 (4倍)
+```
 
-### 第二阶段：用户认证 ✅
-- [x] 注册/登录
-- [x] JWT 认证
-- [x] 家庭管理
+### 5. 数据导入导出
+- 成就系统 JSON 导入/导出
+- 积分规则 JSON 导入/导出
 
-### 第三阶段：积分系统 ✅
-- [x] 积分规则
-- [x] 积分记录
-- [x] 积分统计
+---
 
-### 第四阶段：成就系统 🚧
-- [x] 成就模板
-- [ ] 成就动画
-- [ ] 进度追踪
+## 📚 文档
 
-### 第五阶段：奖励系统 🚧
-- [x] 奖励管理
-- [x] 阶梯价格
-- [ ] 兑换流程
+- [部署指南](./DEPLOY.md) - 详细的部署步骤
+- [项目进展](./PROGRESS.md) - 开发进度和计划
+- [API 文档](./doc/api/README.md) - API 接口文档
 
-### 第六阶段：申诉与会议 🚧
-- [x] 申诉系统
-- [x] 会议系统
-- [ ] PPT 上传
+---
 
-### 第七阶段：数据统计 🚧
-- [ ] 统计图表
-- [ ] 数据导出
-- [ ] 日志系统
+## 🤝 贡献指南
 
-## 贡献指南
-
-1. Fork 项目
+1. Fork 本仓库
 2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
 3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
 5. 创建 Pull Request
 
-## 许可证
+---
 
-[MIT](LICENSE)
+## 📄 许可证
 
-## 联系方式
-
-如有问题或建议，请提交 Issue 或联系开发团队。
+本项目采用 [MIT](LICENSE) 许可证
 
 ---
 
-**注意**: 这是一个教育性质的项目，旨在帮助家长更好地管理和激励孩子的日常行为。请根据孩子的实际情况合理使用。
+## 🙏 致谢
+
+- [Vue.js](https://vuejs.org/)
+- [Cloudflare](https://www.cloudflare.com/)
+- [Hono](https://hono.dev/)
+- [Tailwind CSS](https://tailwindcss.com/)
+
+---
+
+## 📧 联系我们
+
+- 邮箱: your-email@example.com
+- GitHub Issues: [提交问题](https://github.com/yourusername/children-behavior-system/issues)
+
+---
+
+<p align="center">
+  Made with ❤️ for children and parents
+</p>

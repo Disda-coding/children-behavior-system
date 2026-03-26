@@ -14,6 +14,10 @@ import { appealRoutes } from './routes/appeals';
 import { meetingRoutes } from './routes/meetings';
 import { statsRoutes } from './routes/stats';
 import { uploadRoutes } from './routes/upload';
+import notificationRoutes from './routes/notifications';
+import { logRoutes } from './routes/logs';
+import { backupRoutes } from './routes/backups';
+import { autoBackup } from './cron/backup';
 
 // 定义环境变量类型
 export type Env = {
@@ -54,6 +58,9 @@ app.route('/api/appeals', appealRoutes);
 app.route('/api/meetings', meetingRoutes);
 app.route('/api/stats', statsRoutes);
 app.route('/api/upload', uploadRoutes);
+app.route('/api/notifications', notificationRoutes);
+app.route('/api/logs', logRoutes);
+app.route('/api/backups', backupRoutes);
 
 // 404 处理
 app.notFound((c) => {
@@ -69,4 +76,21 @@ app.onError((err, c) => {
   }, 500);
 });
 
-export default app;
+// 导出默认应用
+export default {
+  // HTTP 请求处理
+  fetch: app.fetch,
+
+  // 定时任务处理
+  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
+    switch (event.cron) {
+      case '0 2 * * *':
+        // 每天凌晨2点执行自动备份
+        console.log('Running scheduled backup task...');
+        ctx.waitUntil(autoBackup(env));
+        break;
+      default:
+        console.log('Unknown cron trigger:', event.cron);
+    }
+  },
+};

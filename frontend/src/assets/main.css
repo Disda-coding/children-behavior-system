@@ -1,76 +1,60 @@
-@import './base.css';
-@import 'tailwindcss';
+/* 全局样式 - 儿童行为管理系统 */
 
-#app {
-  max-width: 100%;
-  margin: 0 auto;
-  font-weight: normal;
+/* 页面容器 */
+.app-shell {
+  min-height: 100vh;
+  background: linear-gradient(to bottom, #f8fafc, #f1f5f9);
 }
 
-/* 自定义滚动条 */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* 导航栏 */
+.app-nav {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.95);
 }
 
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
+/* 主内容区域 */
+.app-main {
+  padding-top: 2rem;
+  padding-bottom: 3rem;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
+/* 卡片基础样式 */
+.app-card {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+.app-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
-/* 动画效果 */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
+/* 区块标题 */
+.section-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 1rem;
 }
 
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
+/* 区块容器 */
+.section-block {
+  margin-bottom: 2rem;
 }
 
-.slide-up-enter-active,
-.slide-up-leave-active {
-  transition: all 0.3s ease;
-}
-
-.slide-up-enter-from,
-.slide-up-leave-to {
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-/* 翻页动画 */
-.flip-number {
-  display: inline-block;
-  perspective: 1000px;
-}
-
-.flip-number.animate {
-  animation: flip 0.6s ease-in-out;
-}
-
-/* 成就徽章动画 */
-.achievement-badge {
-  transition: transform 0.3s ease;
-}
-
-.achievement-badge:hover {
-  transform: scale(1.05);
+.section-block:last-child {
+  margin-bottom: 0;
 }
 
 /* 卡片悬停效果 */
 .card-hover {
-  transition: all 0.3s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card-hover:hover {
@@ -78,19 +62,284 @@
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
 }
 
-/* 按钮动画 */
-.btn-animate {
-  transition: all 0.2s ease;
+/* 网格布局间距 */
+.grid-gap-sm {
+  gap: 1rem;
 }
 
-.btn-animate:active {
-  transform: scale(0.95);
+.grid-gap-md {
+  gap: 1.5rem;
 }
 
-/* 响应式布局 */
-@media (max-width: 768px) {
-  .container {
-    padding-left: 1rem;
-    padding-right: 1rem;
+.grid-gap-lg {
+  gap: 2rem;
+}
+
+/* 页面区块间距 */
+.page-section {
+  margin-bottom: 2.5rem;
+}
+
+.page-section:last-child {
+  margin-bottom: 0;
+}
+
+/* Hero 区域 */
+.hero-section {
+  margin-bottom: 2rem;
+}
+
+/* 统计卡片 */
+.stats-grid {
+  display: grid;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* 快捷入口 */
+.quick-actions {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+/* 列表项 */
+.list-item {
+  padding: 1rem 1.25rem;
+  background: #f8fafc;
+  border-radius: 0.75rem;
+  margin-bottom: 0.75rem;
+  transition: background-color 0.15s ease;
+}
+
+.list-item:hover {
+  background: #f1f5f9;
+}
+
+.list-item:last-child {
+  margin-bottom: 0;
+}
+
+/* 按钮样式 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.15s ease;
+}
+
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #2563eb;
+}
+
+.btn-secondary {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.btn-secondary:hover {
+  background: #e2e8f0;
+}
+
+.btn-success {
+  background: #22c55e;
+  color: white;
+}
+
+.btn-success:hover {
+  background: #16a34a;
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+}
+
+/* 输入框样式 */
+.input {
+  width: 100%;
+  padding: 0.625rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* 标签样式 */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.badge-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge-warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge-danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge-info {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  color: #64748b;
+}
+
+.empty-state-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.empty-state-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state-text {
+  font-size: 0.875rem;
+}
+
+/* 弹窗样式 */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 50;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 28rem;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 1rem;
+}
+
+/* 响应式调整 */
+@media (max-width: 640px) {
+  .app-main {
+    padding-top: 1.5rem;
+    padding-bottom: 2rem;
   }
+
+  .app-card {
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .page-section {
+    margin-bottom: 1.5rem;
+  }
+
+  .stats-grid {
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .quick-actions {
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+/* 动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.4s ease-out;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }

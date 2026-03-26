@@ -76,6 +76,11 @@ export const userAchievements = sqliteTable('user_achievements', {
   isCompleted: integer('is_completed', { mode: 'boolean' }).default(false),
   completedAt: text('completed_at'),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  // 撤销相关字段
+  isRevoked: integer('is_revoked', { mode: 'boolean' }).default(false),
+  revokedAt: text('revoked_at'),
+  revokedBy: integer('revoked_by'),
+  revokeReason: text('revoke_reason'),
 });
 
 // 奖励表
@@ -160,6 +165,43 @@ export const exchangeRates = sqliteTable('exchange_rates', {
   updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
+// 通知表
+export const notifications = sqliteTable('notifications', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').notNull(),
+  type: text('type', {
+    enum: ['achievement_unlocked', 'points_earned', 'points_deducted', 'appeal_approved', 'appeal_rejected',
+           'reward_approved', 'reward_rejected', 'meeting_scheduled', 'meeting_cancelled', 'meeting_scored', 'system']
+  }).notNull(),
+  title: text('title').notNull(),
+  content: text('content').notNull(),
+  relatedId: integer('related_id'), // 关联记录ID（如成就ID、积分记录ID等）
+  relatedType: text('related_type'), // 关联类型
+  isRead: integer('is_read', { mode: 'boolean' }).default(false),
+  readAt: text('read_at'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+});
+
+// 数据备份表
+export const backups = sqliteTable('backups', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  familyId: integer('family_id').notNull(),
+  name: text('name').notNull(),
+  description: text('description'),
+  type: text('type', { enum: ['manual', 'auto'] }).notNull().default('manual'),
+  status: text('status', { enum: ['pending', 'completed', 'failed', 'restoring'] }).notNull().default('pending'),
+  dataSize: integer('data_size'), // 数据大小（字节）
+  tables: text('tables'), // 备份的表列表，JSON格式
+  recordCounts: text('record_counts'), // 各表记录数，JSON格式
+  storageUrl: text('storage_url'), // 备份文件存储URL（如果使用外部存储）
+  storageType: text('storage_type', { enum: ['database', 'kv', 'r2'] }).default('database'),
+  createdBy: integer('created_by').notNull(),
+  restoredAt: text('restored_at'),
+  restoredBy: integer('restored_by'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  expiresAt: text('expires_at'), // 备份过期时间
+});
+
 // 类型导出
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -185,3 +227,7 @@ export type SystemLog = typeof systemLogs.$inferSelect;
 export type NewSystemLog = typeof systemLogs.$inferInsert;
 export type ExchangeRate = typeof exchangeRates.$inferSelect;
 export type NewExchangeRate = typeof exchangeRates.$inferInsert;
+export type Notification = typeof notifications.$inferSelect;
+export type NewNotification = typeof notifications.$inferInsert;
+export type Backup = typeof backups.$inferSelect;
+export type NewBackup = typeof backups.$inferInsert;

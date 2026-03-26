@@ -29,3 +29,7 @@ name = "children-behavior-api-dev"
 # 生产环境
 [env.production]
 name = "children-behavior-api-prod"
+
+# 定时任务触发器 - 每天凌晨2点执行自动备份
+[[triggers]]
+crons = ["0 2 * * *"]

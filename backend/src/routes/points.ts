@@ -4,6 +4,8 @@ import { eq, and, gte, desc } from 'drizzle-orm';
 import { pointRecords, pointRules, users } from '../db/schema';
 import { authMiddleware, parentMiddleware } from '../middleware/auth';
 import type { Env } from '../index';
+import { notifyPointsEarned, notifyPointsDeducted } from '../utils/notification';
+import { logPointOperation, logConfigOperation } from '../utils/logger';
 
 const pointRoutes = new Hono<{ Bindings: Env }>();
 
@@ -284,6 +286,25 @@ pointRoutes.post('/records', parentMiddleware, async (c) => {
       createdBy: user.userId,
     }).returning();
 
+    // 发送通知
+    if (data.type === 'earn') {
+      await notifyPointsEarned(c.env.DB, data.userId, data.amount, data.reason, result[0].id);
+    } else if (data.type === 'deduct') {
+      await notifyPointsDeducted(c.env.DB, data.userId, data.amount, data.reason, result[0].id);
+    }
+
+    // 记录日志
+    await logPointOperation(
+      c.env.DB,
+      user.userId,
+      'point_create',
+      result[0].id,
+      result[0],
+      undefined,
+      c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || '',
+      c.req.header('User-Agent') || ''
+    );
+
     return c.json({
       message: 'Point record created successfully',
       record: result[0],
@@ -389,6 +410,162 @@ pointRoutes.get('/stats', async (c) => {
   } catch (error) {
     console.error('Get point stats error:', error);
     return c.json({ error: 'Failed to get point stats' }, 500);
+  }
+});
+
+// 导出积分规则配置（JSON格式）
+pointRoutes.get('/rules/export', parentMiddleware, async (c) => {
+  const db = drizzle(c.env.DB);
+  const user = c.get('user');
+
+  try {
+    // 获取当前用户家庭ID
+    const currentUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, user.userId))
+      .get();
+
+    if (!currentUser) {
+      return c.json({ error: 'User not found' }, 404);
+    }
+
+    // 获取所有积分规则
+    const rules = await db
+      .select()
+      .from(pointRules)
+      .where(eq(pointRules.familyId, currentUser.familyId));
+
+    // 构建导出数据
+    const exportData = {
+      exportVersion: '1.0',
+      exportDate: new Date().toISOString(),
+      familyId: currentUser.familyId,
+      familyName: currentUser.familyName || '',
+      exportedBy: currentUser.displayName,
+      rules: rules.map(rule => ({
+        name: rule.name,
+        description: rule.description,
+        type: rule.type,
+        points: rule.points,
+        category: rule.category,
+        isActive: rule.isActive,
+      })),
+    };
+
+    // 记录日志
+    await logConfigOperation(
+      c.env.DB,
+      user.userId,
+      'config_export',
+      '积分规则',
+      c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || '',
+      c.req.header('User-Agent') || ''
+    );
+
+    // 设置响应头，触发下载
+    c.header('Content-Type', 'application/json');
+    c.header('Content-Disposition', `attachment; filename="point-rules-${currentUser.familyId}-${Date.now()}.json"`);
+
+    return c.json(exportData);
+  } catch (error) {
+    console.error('Export point rules error:', error);
+    return c.json({ error: 'Failed to export point rules' }, 500);
+  }
+});
+
+// 导入积分规则配置（JSON格式）
+pointRoutes.post('/rules/import', parentMiddleware, async (c) => {
+  const db = drizzle(c.env.DB);
+  const user = c.get('user');
+
+  try {
+    const data = await c.req.json();
+
+    // 验证数据格式
+    if (!data.rules || !Array.isArray(data.rules)) {
+      return c.json({ error: 'Invalid import data format' }, 400);
+    }
+
+    // 获取当前用户家庭ID
+    const currentUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, user.userId))
+      .get();
+
+    if (!currentUser) {
+      return c.json({ error: 'User not found' }, 404);
+    }
+
+    // 验证每个规则
+    const validRules = [];
+    const errors = [];
+
+    for (let i = 0; i < data.rules.length; i++) {
+      const rule = data.rules[i];
+
+      // 验证必填字段
+      if (!rule.name || typeof rule.name !== 'string') {
+        errors.push(`规则 ${i + 1}: 名称不能为空`);
+        continue;
+      }
+
+      if (!rule.type || !['earn', 'deduct'].includes(rule.type)) {
+        errors.push(`规则 ${i + 1}: 类型必须是 earn 或 deduct`);
+        continue;
+      }
+
+      if (typeof rule.points !== 'number' || rule.points <= 0) {
+        errors.push(`规则 ${i + 1}: 积分必须是正数`);
+        continue;
+      }
+
+      validRules.push({
+        familyId: currentUser.familyId,
+        name: rule.name,
+        description: rule.description || '',
+        type: rule.type,
+        points: rule.points,
+        category: rule.category || 'general',
+        isActive: rule.isActive !== false, // 默认为true
+      });
+    }
+
+    if (validRules.length === 0) {
+      return c.json({
+        error: '没有有效的规则可以导入',
+        errors,
+      }, 400);
+    }
+
+    // 导入规则
+    const importedRules = [];
+    for (const rule of validRules) {
+      const result = await db.insert(pointRules).values(rule).returning();
+      importedRules.push(result[0]);
+    }
+
+    // 记录日志
+    await logConfigOperation(
+      c.env.DB,
+      user.userId,
+      'config_import',
+      '积分规则',
+      c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || '',
+      c.req.header('User-Agent') || ''
+    );
+
+    return c.json({
+      message: 'Point rules imported successfully',
+      importedCount: importedRules.length,
+      totalCount: data.rules.length,
+      errors: errors.length > 0 ? errors : undefined,
+      rules: importedRules,
+    });
+  } catch (error) {
+    console.error('Import point rules error:', error);
+    return c.json({ error: 'Failed to import point rules' }, 500);
   }
 });
 

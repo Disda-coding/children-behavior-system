@@ -5,6 +5,7 @@ import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
 import { users, families } from '../db/schema';
 import type { Env } from '../index';
+import { checkLoginLimit, recordLoginFailure, clearLoginLimit, getClientIdentifier } from '../middleware/rateLimit';
 
 // JWT 工具函数
 async function signJWT(payload: object, secret: string): Promise<string> {
@@ -75,10 +76,30 @@ function generateInviteCode(): string {
   return code;
 }
 
+// 密码强度验证函数
+function validatePasswordStrength(password: string): { valid: boolean; message?: string } {
+  if (password.length < 8) {
+    return { valid: false, message: '密码长度至少8位' };
+  }
+  if (!/[A-Z]/.test(password)) {
+    return { valid: false, message: '密码必须包含大写字母' };
+  }
+  if (!/[a-z]/.test(password)) {
+    return { valid: false, message: '密码必须包含小写字母' };
+  }
+  if (!/[0-9]/.test(password)) {
+    return { valid: false, message: '密码必须包含数字' };
+  }
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    return { valid: false, message: '密码必须包含特殊字符' };
+  }
+  return { valid: true };
+}
+
 // 验证 Schema
 const registerSchema = z.object({
   username: z.string().min(3).max(50),
-  password: z.string().min(6),
+  password: z.string().min(8),
   role: z.enum(['child', 'parent']),
   displayName: z.string().min(1).max(50),
   familyName: z.string().optional(),
@@ -99,6 +120,12 @@ authRoutes.post('/register', zValidator('json', registerSchema), async (c) => {
   const { JWT_SECRET } = c.env;
 
   try {
+    // 验证密码强度
+    const passwordCheck = validatePasswordStrength(data.password);
+    if (!passwordCheck.valid) {
+      return c.json({ error: passwordCheck.message }, 400);
+    }
+
     // 检查用户名是否已存在
     const existingUser = await db
       .select()
@@ -193,6 +220,15 @@ authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
   const { JWT_SECRET } = c.env;
 
   try {
+    // 获取客户端标识符
+    const clientId = getClientIdentifier(c, username);
+
+    // 检查登录限制
+    const limitCheck = checkLoginLimit(clientId);
+    if (!limitCheck.allowed) {
+      return c.json({ error: limitCheck.message }, 429);
+    }
+
     // 查找用户
     const user = await db
       .select()
@@ -201,15 +237,29 @@ authRoutes.post('/login', zValidator('json', loginSchema), async (c) => {
       .get();
 
     if (!user) {
-      return c.json({ error: '用户名或密码错误' }, 401);
+      // 记录登录失败
+      recordLoginFailure(clientId);
+      return c.json({
+        error: '用户名或密码错误',
+        remainingAttempts: limitCheck.remainingAttempts! - 1,
+      }, 401);
     }
 
     // 验证密码
     const isValidPassword = await verifyPassword(password, user.passwordHash);
 
     if (!isValidPassword) {
-      return c.json({ error: '用户名或密码错误' }, 401);
+      // 记录登录失败
+      recordLoginFailure(clientId);
+      const newLimitCheck = checkLoginLimit(clientId);
+      return c.json({
+        error: '用户名或密码错误',
+        remainingAttempts: newLimitCheck.remainingAttempts,
+      }, 401);
     }
+
+    // 登录成功，清除限制
+    clearLoginLimit(clientId);
 
     // 生成 JWT
     const token = await signJWT(

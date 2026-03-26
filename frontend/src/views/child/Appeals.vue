@@ -1,6 +1,6 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <nav class="bg-white shadow-sm">
+  <div class="app-shell min-h-screen bg-gray-50">
+    <nav class="app-nav bg-white shadow-sm">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center h-16">
           <router-link to="/child/dashboard" class="text-gray-600 hover:text-gray-800 mr-4">
@@ -13,7 +13,7 @@
       </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="app-main max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <!-- 申诉说明 -->
       <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
         <div class="flex items-start gap-3">

@@ -20,6 +20,8 @@ import ParentRewards from '@/views/parent/Rewards.vue';
 import ParentStatistics from '@/views/parent/Statistics.vue';
 import ParentAppeals from '@/views/parent/Appeals.vue';
 import ParentMeetings from '@/views/parent/Meetings.vue';
+import ParentLogs from '@/views/parent/Logs.vue';
+import ParentBackups from '@/views/parent/Backups.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -115,6 +117,16 @@ const router = createRouter({
           path: 'meetings',
           name: 'parent-meetings',
           component: ParentMeetings,
+        },
+        {
+          path: 'logs',
+          name: 'parent-logs',
+          component: ParentLogs,
+        },
+        {
+          path: 'backups',
+          name: 'parent-backups',
+          component: ParentBackups,
         },
       ],
     },
