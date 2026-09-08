@@ -24,7 +24,7 @@
         v-for="item in userAchievements"
         :key="item.id"
         class="card card-hover relative flex flex-col items-center gap-1.5 p-4 text-center"
-        @click="selected = item"
+        @click="onBadgeClick(item)"
       >
         <!-- NEW 标记 -->
         <span
@@ -122,10 +122,12 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { Trophy } from 'lucide-vue-next';
 import { useAuthStore } from '@/stores/auth';
+import { useCelebrationStore } from '@/stores/celebration';
 import { achievementApi } from '@/api';
 import BadgeIcon from '@/components/child/BadgeIcon.vue';
 
 const authStore = useAuthStore();
+const celebrationStore = useCelebrationStore();
 
 const userAchievements = ref<any[]>([]);
 const previousCompletedIds = ref<Set<number>>(new Set());
@@ -150,6 +152,24 @@ const totalRewardPoints = computed(() =>
 const progressPercent = (item: any) => {
   const target = item.achievement?.conditionValue || 1;
   return Math.min(100, Math.round(((item.progress || 0) / target) * 100));
+};
+
+/** 点击徽章：已获得 → 重播全屏庆祝动画；未获得 → 进度详情 */
+const onBadgeClick = (item: any) => {
+  if (item.isCompleted && !item.isRevoked) {
+    celebrationStore.playNow({
+      id: item.id,
+      name: item.achievement?.name || '成就',
+      description: item.achievement?.description,
+      points: item.achievement?.rewardPoints || 0,
+      tier: item.tier,
+      kind: 'achievement',
+      title: '成就回顾',
+    });
+    selected.value = null;
+  } else {
+    selected.value = item;
+  }
 };
 
 const conditionText = (item: any) => {

@@ -61,17 +61,17 @@ export const useCelebrationStore = defineStore('celebration', () => {
         const restored = loadSeen(userId);
         initialized = true;
         if (!restored) {
-          // 第一次使用：静默基线 = 10 分钟前完成的旧成就；
-          // 刚被授予（10 分钟内）的成就仍会补播动画
+          // 第一次使用：静默基线 = 24 小时前完成的旧成就；
+          // 近 24 小时内被授予的成就仍会补播动画（换浏览器/清缓存也能看到）
           const res0 = (await achievementApi.getUserAchievements(userId, true)) as any;
-          const tenMinAgo = Date.now() - 10 * 60 * 1000;
+          const baselineBefore = Date.now() - 24 * 60 * 60 * 1000;
           seenIds = new Set(
             ((res0.userAchievements || []) as any[])
               .filter(
                 (a: any) =>
                   a.isCompleted &&
                   !a.isRevoked &&
-                  (!a.completedAt || new Date(a.completedAt).getTime() < tenMinAgo),
+                  (!a.completedAt || new Date(a.completedAt).getTime() < baselineBefore),
               )
               .map((a: any) => a.id as number),
           );
@@ -144,5 +144,10 @@ export const useCelebrationStore = defineStore('celebration', () => {
     queue.value.shift();
   };
 
-  return { queue, start, stop, dismiss, check };
+  /** 手动播放一个庆祝项（如点击徽章墙重播），不写入已看记录 */
+  const playNow = (item: CelebrationItem) => {
+    queue.value.push(item);
+  };
+
+  return { queue, start, stop, dismiss, playNow, check };
 });
