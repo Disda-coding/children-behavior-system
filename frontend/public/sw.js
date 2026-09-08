@@ -1,5 +1,5 @@
 // Service Worker for Children Behavior Management System
-const CACHE_NAME = 'children-behavior-v2-icons';
+const CACHE_NAME = 'children-behavior-v3-network-first';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -68,6 +68,46 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
+  // 页面导航 / HTML：网络优先——每次部署立即生效，离线时才回退缓存
+  if (request.mode === 'navigate' || url.pathname === '/' || url.pathname === '/index.html') {
+    event.respondWith(
+      fetch(request)
+        .then((networkResponse) => {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseToCache);
+          });
+          return networkResponse;
+        })
+        .catch(() =>
+          caches
+            .match(request)
+            .then((cached) => cached || caches.match('/index.html'))
+        )
+    );
+    return;
+  }
+
+  // 带 hash 的构建产物（不可变内容）：缓存优先，命中即走本地
+  if (url.pathname.startsWith('/assets/')) {
+    event.respondWith(
+      caches.match(request).then((cachedResponse) => {
+        if (cachedResponse) return cachedResponse;
+        return fetch(request).then((networkResponse) => {
+          if (networkResponse.ok) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseToCache);
+            });
+          }
+          return networkResponse;
+        });
+      })
+    );
+    return;
+  }
+
+  // 其余静态资源：stale-while-revalidate（先回缓存，后台更新）
   event.respondWith(
     caches.match(request)
       .then((cachedResponse) => {
