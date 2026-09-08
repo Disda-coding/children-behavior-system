@@ -1,5 +1,5 @@
 // Service Worker for Children Behavior Management System
-const CACHE_NAME = 'children-behavior-v1';
+const CACHE_NAME = 'children-behavior-v2-icons';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
