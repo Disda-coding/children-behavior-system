@@ -2,21 +2,33 @@
   <div>
 
     <div>
-      <!-- 快速添加常用成就 -->
-      <div class="bg-white rounded-2xl shadow-sm p-6 mb-8">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-lg font-bold text-gray-800">快速添加常用成就</h2>
-        </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <!-- 预设成就库入口 -->
+      <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl shadow-sm p-6 mb-8 border border-amber-100">
+        <div class="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+              🏅 预设成就库
+              <span class="text-xs font-normal text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">{{ totalPresetCount }} 个预设</span>
+            </h2>
+            <p class="text-sm text-gray-500 mt-1">八大分类 · 铜银金铂四档 · 勾选后一键批量导入，同名自动跳过</p>
+          </div>
           <button
-            v-for="template in achievementTemplates"
-            :key="template.name"
-            @click="quickAddAchievement(template)"
-            class="p-4 bg-gray-50 rounded-xl hover:bg-green-50 hover:border-green-200 border border-transparent transition-all text-center"
+            @click="openPresetModal()"
+            class="bg-amber-500 text-white px-5 py-2.5 rounded-lg hover:bg-amber-600 transition-colors font-medium shadow-sm"
           >
-            <div class="text-2xl mb-2">{{ template.icon }}</div>
-            <p class="text-sm font-medium text-gray-800">{{ template.name }}</p>
-            <p class="text-xs text-gray-500 mt-1">{{ template.conditionValue }}{{ template.conditionUnit }}</p>
+            浏览预设库并批量导入
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-2 mt-4">
+          <button
+            v-for="cat in presetCategories"
+            :key="cat.key"
+            @click="openPresetModal(cat.key)"
+            class="flex items-center gap-1.5 bg-white/80 hover:bg-white border border-amber-200/60 rounded-full px-3 py-1.5 text-sm text-gray-700 transition-colors"
+          >
+            <span>{{ cat.icon }}</span>
+            <span>{{ cat.label }}</span>
+            <span class="text-xs text-gray-400">{{ cat.presets.length }}</span>
           </button>
         </div>
       </div>
@@ -219,9 +231,10 @@
               v-model="newAchievement.conditionType"
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             >
-              <option value="consecutive">连续</option>
+              <option value="consecutive">连续天数</option>
               <option value="count">累计次数</option>
-              <option value="accumulate">累计数值</option>
+              <option value="accumulate">累计积分</option>
+              <option value="streak">打卡火苗保持天数</option>
             </select>
           </div>
           <div>
@@ -402,6 +415,103 @@
         </div>
       </div>
     </div>
+    <!-- 预设成就库批量导入弹窗 -->
+    <div v-if="showPresetModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+        <!-- 头部 -->
+        <div class="p-6 pb-4 border-b border-gray-100">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-bold text-gray-800">🏅 预设成就库</h3>
+            <button @click="closePresetModal" class="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+          </div>
+          <!-- 分类 tabs -->
+          <div class="flex flex-wrap gap-2 mt-4">
+            <button
+              v-for="cat in presetCategories"
+              :key="cat.key"
+              @click="presetTab = cat.key"
+              :class="[
+                'px-3 py-1.5 rounded-full text-sm transition-colors border',
+                presetTab === cat.key
+                  ? 'bg-amber-500 text-white border-amber-500'
+                  : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+              ]"
+            >
+              {{ cat.icon }} {{ cat.label }}
+            </button>
+          </div>
+          <p class="text-xs text-gray-400 mt-2">{{ activeCategory?.description }}</p>
+        </div>
+
+        <!-- 列表（可滚动） -->
+        <div class="flex-1 overflow-y-auto p-6 pt-4">
+          <div class="flex items-center justify-between mb-3">
+            <button @click="toggleSelectAllInTab" class="text-sm text-amber-600 hover:text-amber-700 font-medium">
+              {{ isAllSelectedInTab ? '取消全选本类' : '全选本类' }}
+            </button>
+            <p class="text-xs text-gray-400">已选 {{ selectedPresetNames.size }} 个</p>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label
+              v-for="preset in activeCategory?.presets || []"
+              :key="preset.name"
+              :class="[
+                'flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all',
+                existingNames.has(preset.name)
+                  ? 'bg-gray-50 border-gray-100 opacity-50 cursor-not-allowed'
+                  : selectedPresetNames.has(preset.name)
+                    ? 'bg-amber-50 border-amber-300'
+                    : 'bg-white border-gray-200 hover:border-amber-200'
+              ]"
+            >
+              <input
+                type="checkbox"
+                :checked="selectedPresetNames.has(preset.name)"
+                :disabled="existingNames.has(preset.name)"
+                @change="togglePreset(preset.name)"
+                class="mt-1 accent-amber-500"
+              />
+              <span class="text-2xl">{{ preset.icon }}</span>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <p class="text-sm font-medium text-gray-800">{{ preset.name }}</p>
+                  <span
+                    class="text-[10px] px-1.5 py-0.5 rounded-full font-medium"
+                    :style="{ color: tierMeta[preset.tier].color, background: tierMeta[preset.tier].bg }"
+                  >
+                    {{ tierMeta[preset.tier].label }} · +{{ preset.rewardPoints }}
+                  </span>
+                  <span v-if="existingNames.has(preset.name)" class="text-[10px] text-gray-400">已添加</span>
+                </div>
+                <p class="text-xs text-gray-500 mt-0.5">{{ preset.description }}</p>
+                <p class="text-[11px] text-gray-400 mt-0.5">{{ presetConditionText(preset) }}</p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- 底部操作 -->
+        <div class="p-6 pt-4 border-t border-gray-100 flex items-center gap-3">
+          <p class="text-sm text-gray-500 flex-1">
+            共选 <span class="font-bold text-amber-600">{{ selectedPresetNames.size }}</span> 个成就
+            <span v-if="importResult" class="ml-2 text-green-600">{{ importResult }}</span>
+          </p>
+          <button
+            @click="closePresetModal"
+            class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            关闭
+          </button>
+          <button
+            @click="importSelectedPresets"
+            :disabled="selectedPresetNames.size === 0 || presetImporting"
+            class="px-5 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {{ presetImporting ? '导入中...' : '一键导入所选' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -409,6 +519,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { achievementApi, familyApi, achievementConfigApi } from '@/api';
+import { presetCategories, allPresets, tierMeta } from '@/data/achievementPresets';
 
 const authStore = useAuthStore();
 
@@ -428,26 +539,104 @@ const importLoading = ref(false);
 
 const commonIcons = ['🏆', '🥇', '🥈', '🥉', '⭐', '💫', '🌟', '✨', '🎯', '🎖️', '🏅', '🌈', '🔥', '💪', '📚'];
 
-const achievementTemplates = [
-  { name: '早起达人', icon: '🌅', description: '连续早起不赖床', conditionType: 'consecutive', conditionValue: 7, conditionUnit: '天' },
-  { name: '作业之星', icon: '⭐', description: '按时完成所有作业', conditionType: 'consecutive', conditionValue: 5, conditionUnit: '天' },
-  { name: '阅读小能手', icon: '📚', description: '累计阅读时长', conditionType: 'accumulate', conditionValue: 10, conditionUnit: '小时' },
-  { name: '运动健将', icon: '⚽', description: '累计运动次数', conditionType: 'count', conditionValue: 20, conditionUnit: '次' },
-  { name: '整理大师', icon: '🧹', description: '保持房间整洁', conditionType: 'consecutive', conditionValue: 7, conditionUnit: '天' },
-  { name: '礼貌之星', icon: '🌟', description: '主动问好、说谢谢', conditionType: 'count', conditionValue: 30, conditionUnit: '次' },
-  { name: '节约小卫士', icon: '💧', description: '节约用水用电', conditionType: 'consecutive', conditionValue: 14, conditionUnit: '天' },
-  { name: '助人之星', icon: '🤝', description: '帮助他人次数', conditionType: 'count', conditionValue: 10, conditionUnit: '次' },
-  { name: '专注小达人', icon: '🎯', description: '专注学习时长', conditionType: 'accumulate', conditionValue: 20, conditionUnit: '小时' },
-  { name: '创意之星', icon: '🎨', description: '完成创意作品', conditionType: 'count', conditionValue: 5, conditionUnit: '件' },
-  { name: '音乐小天才', icon: '🎵', description: '练习乐器时长', conditionType: 'accumulate', conditionValue: 15, conditionUnit: '小时' },
-  { name: '环保卫士', icon: '🌱', description: '参与环保活动', conditionType: 'count', conditionValue: 5, conditionUnit: '次' },
-];
+/* ---------- 预设库批量导入 ---------- */
+const showPresetModal = ref(false);
+const presetTab = ref(presetCategories[0]!.key);
+const selectedPresetNames = ref<Set<string>>(new Set());
+const presetImporting = ref(false);
+const importResult = ref('');
+
+const totalPresetCount = allPresets.length;
+const activeCategory = computed(() => presetCategories.find((c) => c.key === presetTab.value));
+const existingNames = computed(() => new Set(achievements.value.map((a: any) => a.name)));
+const isAllSelectedInTab = computed(() => {
+  const presets = activeCategory.value?.presets || [];
+  const selectable = presets.filter((p) => !existingNames.value.has(p.name));
+  return selectable.length > 0 && selectable.every((p) => selectedPresetNames.value.has(p.name));
+});
+
+const openPresetModal = (tabKey?: string) => {
+  if (tabKey) presetTab.value = tabKey;
+  importResult.value = '';
+  showPresetModal.value = true;
+};
+
+const closePresetModal = () => {
+  showPresetModal.value = false;
+};
+
+const togglePreset = (name: string) => {
+  if (selectedPresetNames.value.has(name)) {
+    selectedPresetNames.value.delete(name);
+  } else {
+    selectedPresetNames.value.add(name);
+  }
+  selectedPresetNames.value = new Set(selectedPresetNames.value);
+};
+
+const toggleSelectAllInTab = () => {
+  const presets = (activeCategory.value?.presets || []).filter(
+    (p) => !existingNames.value.has(p.name)
+  );
+  const next = new Set(selectedPresetNames.value);
+  if (isAllSelectedInTab.value) {
+    presets.forEach((p) => next.delete(p.name));
+  } else {
+    presets.forEach((p) => next.add(p.name));
+  }
+  selectedPresetNames.value = next;
+};
+
+const presetConditionText = (preset: any) => {
+  const map: Record<string, string> = {
+    count: `累计获得积分 ${preset.conditionValue} 次`,
+    accumulate: `累计获得 ${preset.conditionValue} 积分`,
+    consecutive: `连续 ${preset.conditionValue} 天获得积分`,
+    streak: `打卡火苗保持 ${preset.conditionValue} 天`,
+  };
+  return map[preset.conditionType] || `${preset.conditionValue}${preset.conditionUnit}`;
+};
+
+const importSelectedPresets = async () => {
+  const selected = allPresets.filter((p) => selectedPresetNames.value.has(p.name));
+  if (selected.length === 0) return;
+
+  presetImporting.value = true;
+  importResult.value = '';
+  try {
+    const res = await achievementConfigApi.importAchievements({
+      achievements: selected.map((p) => ({
+        name: p.name,
+        description: p.description,
+        iconUrl: p.icon,
+        conditionType: p.conditionType,
+        conditionValue: p.conditionValue,
+        conditionUnit: p.conditionUnit,
+        rewardPoints: p.rewardPoints,
+      })),
+      familyId: authStore.user?.familyId || 0,
+    });
+    if (res.success) {
+      const skipped = selected.length - res.importedCount;
+      importResult.value = `已导入 ${res.importedCount} 个${skipped > 0 ? `，跳过 ${skipped} 个同名` : ''}`;
+      selectedPresetNames.value = new Set();
+      fetchAchievements();
+    } else {
+      alert(res.error || '导入失败');
+    }
+  } catch (error) {
+    console.error('批量导入失败:', error);
+    alert('批量导入失败');
+  } finally {
+    presetImporting.value = false;
+  }
+};
 
 const newAchievement = ref({
   name: '',
   description: '',
   iconUrl: '🏆',
-  conditionType: 'consecutive' as 'consecutive' | 'count' | 'accumulate',
+  conditionType: 'consecutive' as 'consecutive' | 'count' | 'accumulate' | 'streak',
   conditionValue: 7,
   conditionUnit: '天',
   rewardPoints: 0,
@@ -506,26 +695,6 @@ const fetchAssignedAchievements = async () => {
     assignedAchievements.value = allAssigned;
   } catch (error) {
     console.error('Failed to fetch assigned achievements:', error);
-  }
-};
-
-const quickAddAchievement = async (template: any) => {
-  try {
-    await achievementApi.createAchievement({
-      familyId: authStore.user?.familyId,
-      name: template.name,
-      description: template.description,
-      conditionType: template.conditionType,
-      conditionValue: template.conditionValue,
-      conditionUnit: template.conditionUnit,
-      iconUrl: template.icon,
-      rewardPoints: 0,
-    });
-    fetchAchievements();
-    alert(`已添加成就：${template.name}`);
-  } catch (error) {
-    console.error('Failed to add achievement:', error);
-    alert('添加成就失败');
   }
 };
 
