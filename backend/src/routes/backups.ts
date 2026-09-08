@@ -16,9 +16,9 @@ import {
   notifications,
 } from '../db/schema';
 import { authMiddleware, parentMiddleware } from '../middleware/auth';
-import type { Env } from '../index';
+import type { AppEnv } from '../types';
 
-const backupRoutes = new Hono<{ Bindings: Env }>();
+const backupRoutes = new Hono<AppEnv>();
 
 // 应用认证中间件
 backupRoutes.use('*', authMiddleware);
@@ -49,7 +49,7 @@ backupRoutes.get('/', async (c) => {
       })
       .from(backups)
       .leftJoin(users, eq(backups.createdBy, users.id))
-      .where(eq(backups.familyId, currentUser.familyId));
+      .where(eq(backups.familyId, currentUser.familyId)).$dynamic();
 
     if (type) {
       query = query.where(eq(backups.type, type));

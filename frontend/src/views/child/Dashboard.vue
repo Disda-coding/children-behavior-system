@@ -1,329 +1,195 @@
 <template>
-  <div class="app-shell min-h-screen bg-gradient-to-br from-green-50 to-emerald-50">
-    <!-- 导航栏 -->
-    <nav class="app-nav bg-white shadow-sm">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16">
-          <div class="flex items-center">
-            <router-link to="/child/dashboard" class="text-gray-600 hover:text-gray-800 mr-4">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-            </router-link>
-            <h1 class="text-xl font-bold text-gray-800">我的成长</h1>
-          </div>
-          <div class="flex items-center space-x-3">
-            <!-- 通知中心 -->
-            <NotificationCenter />
-            <div class="flex items-center space-x-2 px-3 py-1.5 bg-gray-100 rounded-full">
-              <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-medium text-sm">
-                {{ authStore.user?.displayName?.charAt(0) || '?' }}
-              </div>
-              <span class="text-gray-700 text-sm font-medium">{{ authStore.user?.displayName }}</span>
-            </div>
-            <button
-              @click="authStore.logout"
-              class="flex items-center gap-1.5 px-3 py-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all text-sm font-medium"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              退出
-            </button>
-          </div>
-        </div>
+  <div class="space-y-5">
+    <!-- 问候 + Streak + 等级 -->
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h2 class="font-display text-2xl font-extrabold text-ink">
+          你好，{{ authStore.user?.displayName }}！
+        </h2>
+        <p class="text-sm text-ink-2">继续努力，集齐今天的三环吧</p>
       </div>
-    </nav>
+      <StreakFlame :streak="rings?.streak ?? 0" :freeze-cards="rings?.freezeCards ?? 0" />
+    </div>
 
-    <!-- 主内容区域 -->
-    <main class="app-main max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <!-- 欢迎区域 -->
-      <div class="hero-section mb-8">
-        <h2 class="text-2xl font-bold text-gray-800 mb-2">你好，{{ authStore.user?.displayName }}！</h2>
-        <p class="text-gray-600">继续努力，获得更多积分和成就吧！</p>
+    <!-- 三环 + 积分主卡 -->
+    <div class="grid gap-5 lg:grid-cols-[auto_1fr]">
+      <div class="card flex items-center justify-center p-6">
+        <ProgressRings
+          v-if="rings"
+          :points="rings.points"
+          :habits="rings.habits"
+          :persist="rings.persist"
+          :all-complete="rings.allComplete"
+          :size="216"
+        />
+        <div v-else class="h-[216px] w-[216px] animate-pulse rounded-full bg-ink/5"></div>
       </div>
 
-      <!-- 积分卡片 -->
-      <div class="page-section">
-        <div class="bg-gradient-to-r from-green-500 to-emerald-600 rounded-3xl p-8 text-white shadow-lg">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-green-100 text-sm mb-2">我的积分</p>
-              <div class="flex items-baseline gap-2">
-                <FlipNumber :value="points" class="text-5xl font-bold" />
-                <span class="text-green-100 text-lg">分</span>
-              </div>
+      <div class="flex flex-col gap-5">
+        <!-- 积分大数字 -->
+        <div class="points-card p-6">
+          <p class="text-sm text-white/75">我的积分</p>
+          <div class="mt-1 flex items-baseline gap-2">
+            <FlipNumber :value="points" class="font-display text-5xl font-extrabold" />
+            <span class="text-lg text-white/75">分</span>
+          </div>
+          <div class="mt-4 grid grid-cols-2 gap-3">
+            <div class="rounded-xl bg-white/10 px-4 py-2.5">
+              <p class="text-xs text-white/70">今日获得</p>
+              <p class="font-display text-xl font-bold">+{{ todayPoints }}</p>
             </div>
-            <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center">
-              <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+            <div class="rounded-xl bg-white/10 px-4 py-2.5">
+              <p class="text-xs text-white/70">本周获得</p>
+              <p class="font-display text-xl font-bold">+{{ weekPoints }}</p>
             </div>
           </div>
-          <div class="mt-6 grid grid-cols-2 gap-4">
-            <div class="bg-white/10 rounded-xl p-4">
-              <p class="text-green-100 text-xs mb-1">今日获得</p>
-              <p class="text-2xl font-bold">+{{ todayPoints }}</p>
-            </div>
-            <div class="bg-white/10 rounded-xl p-4">
-              <p class="text-green-100 text-xs mb-1">本周获得</p>
-              <p class="text-2xl font-bold">+{{ weekPoints }}</p>
-            </div>
-          </div>
+        </div>
+
+        <!-- 等级 -->
+        <div v-if="rings" class="card p-4">
+          <LevelBadge :level="rings.level" />
         </div>
       </div>
+    </div>
 
-      <!-- 统计卡片 -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-          <div class="flex items-center justify-between mb-4">
-            <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
-              <span class="text-2xl">🏆</span>
-            </div>
-          </div>
-          <div class="text-3xl font-bold text-gray-800">{{ achievements }}</div>
-          <div class="text-sm text-gray-500 mt-1">已获成就</div>
-        </div>
-
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-          <div class="flex items-center justify-between mb-4">
-            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-              <span class="text-2xl">🎁</span>
-            </div>
-          </div>
-          <div class="text-3xl font-bold text-gray-800">{{ rewards }}</div>
-          <div class="text-sm text-gray-500 mt-1">已兑换奖励</div>
-        </div>
-
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-          <div class="flex items-center justify-between mb-4">
-            <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-              <span class="text-2xl">📅</span>
-            </div>
-          </div>
-          <div class="text-3xl font-bold text-gray-800">{{ meetings }}</div>
-          <div class="text-sm text-gray-500 mt-1">会议次数</div>
-        </div>
-
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-          <div class="flex items-center justify-between mb-4">
-            <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
-              <span class="text-2xl">⭐</span>
-            </div>
-          </div>
-          <div class="text-3xl font-bold text-gray-800">{{ avgScore }}</div>
-          <div class="text-sm text-gray-500 mt-1">会议平均分</div>
-        </div>
+    <!-- 快捷入口 -->
+    <div>
+      <h3 class="mb-3 text-sm font-semibold text-ink-2">快捷入口</h3>
+      <div class="grid grid-cols-2 gap-3 md:grid-cols-5">
+        <RouterLink
+          v-for="entry in quickEntries"
+          :key="entry.to"
+          :to="entry.to"
+          class="card card-hover group flex flex-col items-center gap-3 p-5"
+        >
+          <span
+            class="flex h-12 w-12 items-center justify-center rounded-2xl transition-transform group-hover:scale-110"
+            :style="{ background: entry.bg, color: entry.color }"
+          >
+            <component :is="entry.icon" class="h-6 w-6" />
+          </span>
+          <span class="text-sm font-medium text-ink">{{ entry.label }}</span>
+        </RouterLink>
       </div>
+    </div>
 
-      <!-- 快捷入口 -->
-      <div class="page-section">
-        <h3 class="section-title mb-6">快捷入口</h3>
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
-          <router-link
-            to="/child/achievements"
-            class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 card-hover flex flex-col items-center justify-center"
-          >
-            <div class="bg-yellow-100 w-14 h-14 rounded-full flex items-center justify-center mb-4">
-              <span class="text-2xl">🏆</span>
-            </div>
-            <h3 class="font-medium text-gray-800 text-base">我的成就</h3>
-          </router-link>
-
-          <router-link
-            to="/child/rewards"
-            class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 card-hover flex flex-col items-center justify-center"
-          >
-            <div class="bg-blue-100 w-14 h-14 rounded-full flex items-center justify-center mb-4">
-              <span class="text-2xl">🎁</span>
-            </div>
-            <h3 class="font-medium text-gray-800 text-base">兑换奖励</h3>
-          </router-link>
-
-          <router-link
-            to="/child/meetings"
-            class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 card-hover flex flex-col items-center justify-center"
-          >
-            <div class="bg-purple-100 w-14 h-14 rounded-full flex items-center justify-center mb-4">
-              <span class="text-2xl">📅</span>
-            </div>
-            <h3 class="font-medium text-gray-800 text-base">家庭会议</h3>
-          </router-link>
-
-          <router-link
-            to="/child/appeals"
-            class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 card-hover flex flex-col items-center justify-center"
-          >
-            <div class="bg-orange-100 w-14 h-14 rounded-full flex items-center justify-center mb-4">
-              <span class="text-2xl">📝</span>
-            </div>
-            <h3 class="font-medium text-gray-800 text-base">申诉中心</h3>
-          </router-link>
-
-          <router-link
-            to="/child/records"
-            class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 card-hover flex flex-col items-center justify-center"
-          >
-            <div class="bg-green-100 w-14 h-14 rounded-full flex items-center justify-center mb-4">
-              <span class="text-2xl">📊</span>
-            </div>
-            <h3 class="font-medium text-gray-800 text-base">积分记录</h3>
-          </router-link>
+    <!-- 最近动态 -->
+    <div>
+      <h3 class="mb-3 text-sm font-semibold text-ink-2">最近动态</h3>
+      <div class="card overflow-hidden">
+        <div v-if="recentRecords.length === 0" class="py-12 text-center text-ink-2">
+          暂无记录，快去赚积分吧！
         </div>
-      </div>
-
-      <!-- 最近动态 -->
-      <div class="page-section">
-        <h3 class="section-title mb-6">最近动态</h3>
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div v-if="recentRecords.length === 0" class="text-center py-12 text-gray-500">
-            暂无记录
-          </div>
-          <div v-else class="divide-y divide-slate-100">
-            <div
-              v-for="record in recentRecords"
-              :key="record.id"
-              class="flex items-center justify-between p-5 hover:bg-slate-50 transition-colors"
-            >
-              <div class="flex items-center gap-4">
-                <div
-                  class="w-10 h-10 rounded-full flex items-center justify-center"
-                  :class="record.type === 'earn' ? 'bg-green-100' : 'bg-red-100'"
-                >
-                  <span v-if="record.type === 'earn'">💰</span>
-                  <span v-else>💸</span>
-                </div>
-                <div>
-                  <p class="font-medium text-gray-800">{{ record.reason }}</p>
-                  <p class="text-sm text-gray-500">{{ formatDate(record.createdAt) }}</p>
-                </div>
-              </div>
+        <div v-else class="divide-y divide-line">
+          <div
+            v-for="record in recentRecords"
+            :key="record.id"
+            class="flex items-center justify-between px-5 py-3.5 transition-colors hover:bg-ink/[0.02]"
+          >
+            <div class="flex items-center gap-3">
               <span
-                :class="[
-                  'text-lg font-bold',
-                  record.type === 'earn' ? 'text-green-600' : 'text-red-600'
-                ]"
+                class="flex h-9 w-9 items-center justify-center rounded-full"
+                :class="record.type === 'earn' ? 'bg-sprout/15' : 'bg-coral/10'"
               >
-                {{ record.type === 'earn' ? '+' : '-' }}{{ record.amount }}
+                <CirclePlus v-if="record.type === 'earn'" class="h-5 w-5 text-sprout" />
+                <CircleMinus v-else class="h-5 w-5 text-coral" />
               </span>
+              <div>
+                <p class="text-sm font-medium text-ink">{{ record.reason }}</p>
+                <p class="text-xs text-ink-2">{{ formatDate(record.createdAt) }}</p>
+              </div>
             </div>
+            <span
+              class="font-display text-base font-bold"
+              :class="record.type === 'earn' ? 'text-sprout' : 'text-coral'"
+            >
+              {{ record.type === 'earn' ? '+' : '-' }}{{ record.amount }}
+            </span>
           </div>
         </div>
       </div>
-    </main>
-
-    <!-- 成就解锁动画 -->
-    <AchievementUnlockAnimation
-      :achievements="unlockedAchievements"
-      @close="unlockedAchievements = []"
-    />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
+import { RouterLink } from 'vue-router';
+import {
+  CircleMinus,
+  CirclePlus,
+  FileClock,
+  Gift,
+  ScrollText,
+  Trophy,
+  UsersRound,
+} from 'lucide-vue-next';
 import { useAuthStore } from '@/stores/auth';
-import { pointApi, achievementApi, rewardApi, meetingApi } from '@/api';
+import { pointApi } from '@/api';
 import FlipNumber from '@/components/common/FlipNumber.vue';
-import NotificationCenter from '@/components/common/NotificationCenter.vue';
-import AchievementUnlockAnimation from '@/components/common/AchievementUnlockAnimation.vue';
+import ProgressRings from '@/components/child/ProgressRings.vue';
+import StreakFlame from '@/components/child/StreakFlame.vue';
+import LevelBadge from '@/components/child/LevelBadge.vue';
+
+interface RingsData {
+  points: { value: number; target: number };
+  habits: { value: number; target: number };
+  persist: { value: number; target: number };
+  allComplete: boolean;
+  streak: number;
+  freezeCards: number;
+  exp: number;
+  level: {
+    level: number;
+    name: string;
+    exp: number;
+    nextLevelExp: number | null;
+    progress: number;
+  };
+}
 
 const authStore = useAuthStore();
 
 const points = ref(0);
 const todayPoints = ref(0);
 const weekPoints = ref(0);
-const achievements = ref(0);
-const rewards = ref(0);
-const meetings = ref(0);
-const avgScore = ref<string | number>(0);
 const recentRecords = ref<any[]>([]);
-const unlockedAchievements = ref<any[]>([]);
-const previousAchievements = ref<Set<number>>(new Set());
+const rings = ref<RingsData | null>(null);
 
-let pollInterval: number | null = null;
-let isFirstLoad = true;
+const quickEntries = [
+  { to: '/child/achievements', label: '我的成就', icon: Trophy, bg: 'rgba(255,176,32,0.15)', color: '#ffb020' },
+  { to: '/child/rewards', label: '兑换奖励', icon: Gift, bg: 'rgba(255,90,95,0.12)', color: '#ff5a5f' },
+  { to: '/child/meetings', label: '家庭会议', icon: UsersRound, bg: 'rgba(34,195,230,0.12)', color: '#22c3e6' },
+  { to: '/child/appeals', label: '申诉中心', icon: ScrollText, bg: 'rgba(124,217,63,0.15)', color: '#5cb52b' },
+  { to: '/child/records', label: '积分记录', icon: FileClock, bg: 'rgba(28,28,30,0.05)', color: '#6e6e73' },
+];
 
 const fetchPoints = async () => {
   try {
     const userId = authStore.user?.id;
     if (!userId) return;
 
-    const statsRes = await pointApi.getStats({ userId }) as any;
-    // 修复：后端返回的数据结构是 { stats: { totalBalance, todayEarned, weekEarned, ... } }
+    const statsRes = (await pointApi.getStats({ userId })) as any;
     const stats = statsRes.stats || {};
     points.value = stats.totalBalance || 0;
     todayPoints.value = stats.todayEarned || 0;
     weekPoints.value = stats.weekEarned || 0;
 
-    const recordsRes = await pointApi.getRecords({ userId }) as any;
+    const recordsRes = (await pointApi.getRecords({ userId })) as any;
     recentRecords.value = (recordsRes.records || []).slice(0, 10);
   } catch (error) {
     console.error('Failed to fetch points:', error);
   }
 };
 
-const fetchAchievements = async () => {
+const fetchRings = async () => {
   try {
     const userId = authStore.user?.id;
     if (!userId) return;
-
-    const res = await achievementApi.getUserAchievements(userId, true) as any;
-    const userAchievements = res.userAchievements || [];
-    achievements.value = userAchievements.filter((a: any) => !a.isRevoked).length;
-
-    if (!isFirstLoad) {
-      const currentIds = new Set<number>(userAchievements.map((a: any) => a.achievementId));
-      const newUnlocked = userAchievements.filter(
-        (a: any) => !previousAchievements.value.has(a.achievementId) && !a.isRevoked
-      );
-      if (newUnlocked.length > 0) {
-        unlockedAchievements.value = newUnlocked.map((a: any) => ({
-          name: a.achievement?.name || '成就',
-          icon: a.achievement?.iconUrl || '🏆',
-          points: a.achievement?.rewardPoints || 0,
-        }));
-      }
-      previousAchievements.value = currentIds;
-    } else {
-      previousAchievements.value = new Set<number>(userAchievements.map((a: any) => a.achievementId));
-      isFirstLoad = false;
-    }
+    const res = (await pointApi.getRings(userId)) as any;
+    if (res.rings) rings.value = res.rings;
   } catch (error) {
-    console.error('Failed to fetch achievements:', error);
-  }
-};
-
-const fetchRewards = async () => {
-  try {
-    const userId = authStore.user?.id;
-    if (!userId) return;
-
-    const res = await rewardApi.getRedemptions({ userId }) as any;
-    rewards.value = (res.redemptions || []).filter(
-      (r: any) => r.status === 'approved' || r.status === 'completed'
-    ).length;
-  } catch (error) {
-    console.error('Failed to fetch rewards:', error);
-  }
-};
-
-const fetchMeetings = async () => {
-  try {
-    const userId = authStore.user?.id;
-    if (!userId) return;
-
-    const res = await meetingApi.getMeetings({ childId: userId }) as any;
-    const meetingList = res.data || res.meetings || [];
-    meetings.value = meetingList.length;
-
-    const scoredMeetings = meetingList.filter((m: any) => m.score);
-    if (scoredMeetings.length > 0) {
-      const totalScore = scoredMeetings.reduce((sum: number, m: any) => sum + m.score, 0);
-      avgScore.value = (totalScore / scoredMeetings.length).toFixed(1);
-    }
-  } catch (error) {
-    console.error('Failed to fetch meetings:', error);
+    console.error('Failed to fetch rings:', error);
   }
 };
 
@@ -336,29 +202,34 @@ const formatDate = (date: string) => {
   });
 };
 
+let pollInterval: number | null = null;
+
 const startPolling = () => {
   pollInterval = window.setInterval(() => {
     fetchPoints();
-    fetchAchievements();
-  }, 5000);
-};
-
-const stopPolling = () => {
-  if (pollInterval) {
-    clearInterval(pollInterval);
-    pollInterval = null;
-  }
+    fetchRings();
+  }, 10000);
 };
 
 onMounted(() => {
   fetchPoints();
-  fetchAchievements();
-  fetchRewards();
-  fetchMeetings();
+  fetchRings();
   startPolling();
 });
 
 onUnmounted(() => {
-  stopPolling();
+  if (pollInterval) {
+    clearInterval(pollInterval);
+    pollInterval = null;
+  }
 });
 </script>
+
+<style scoped>
+.points-card {
+  border-radius: 1.5rem;
+  background: linear-gradient(135deg, var(--color-coral) 0%, #ff7a45 100%);
+  color: #fff;
+  box-shadow: 0 12px 28px -10px rgb(255 90 95 / 45%);
+}
+</style>

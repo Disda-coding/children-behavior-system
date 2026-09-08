@@ -1,19 +1,7 @@
 <template>
-  <div class="app-shell min-h-screen bg-gray-50">
-    <nav class="app-nav bg-white shadow-sm">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center h-16">
-          <router-link to="/child/dashboard" class="text-gray-600 hover:text-gray-800 mr-4">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-          </router-link>
-          <h1 class="text-xl font-bold text-gray-800">申诉</h1>
-        </div>
-      </div>
-    </nav>
+  <div>
 
-    <main class="app-main max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div>
       <!-- 申诉说明 -->
       <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
         <div class="flex items-start gap-3">
@@ -110,7 +98,7 @@
           </div>
         </div>
       </div>
-    </main>
+    </div>
 
     <!-- 申诉弹窗 -->
     <div v-if="showAppealModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

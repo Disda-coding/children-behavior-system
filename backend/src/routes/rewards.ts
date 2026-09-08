@@ -2,10 +2,10 @@ import { Hono } from 'hono';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, and, desc } from 'drizzle-orm';
 import { rewards, rewardRedemptions, users, pointRecords } from '../db/schema';
-import type { Env } from '../index';
+import type { AppEnv } from '../types';
 import { notifyRewardApproved, notifyRewardRejected } from '../utils/notification';
 
-const rewardRoutes = new Hono<{ Bindings: Env }>();
+const rewardRoutes = new Hono<AppEnv>();
 
 // 获取奖励列表
 rewardRoutes.get('/', async (c) => {
@@ -17,7 +17,7 @@ rewardRoutes.get('/', async (c) => {
     let query = db
       .select()
       .from(rewards)
-      .where(eq(rewards.isActive, true));
+      .where(eq(rewards.isActive, true)).$dynamic();
     
     if (familyId) {
       query = query.where(eq(rewards.familyId, parseInt(familyId)));
@@ -176,7 +176,7 @@ rewardRoutes.post('/:id/redeem', async (c) => {
       .select()
       .from(pointRecords)
       .where(eq(pointRecords.userId, userId))
-      .orderBy(desc(pointRecords.createdAt))
+      .orderBy(desc(pointRecords.createdAt), desc(pointRecords.id))
       .limit(1)
       .get();
     
@@ -242,7 +242,7 @@ rewardRoutes.get('/redemptions', async (c) => {
       })
       .from(rewardRedemptions)
       .leftJoin(rewards, eq(rewardRedemptions.rewardId, rewards.id))
-      .leftJoin(users, eq(rewardRedemptions.userId, users.id));
+      .leftJoin(users, eq(rewardRedemptions.userId, users.id)).$dynamic();
     
     if (userId) {
       query = query.where(eq(rewardRedemptions.userId, parseInt(userId)));
@@ -350,7 +350,7 @@ rewardRoutes.put('/redemptions/:id/reject', async (c) => {
       .select()
       .from(pointRecords)
       .where(eq(pointRecords.userId, redemption.userId))
-      .orderBy(desc(pointRecords.createdAt))
+      .orderBy(desc(pointRecords.createdAt), desc(pointRecords.id))
       .limit(1)
       .get();
 

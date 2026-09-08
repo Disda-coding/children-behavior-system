@@ -16,7 +16,7 @@ notificationRoutes.get('/', async (c) => {
   const { unreadOnly, limit = '20', offset = '0' } = c.req.query();
 
   try {
-    let query = db.select().from(notifications).where(eq(notifications.userId, userId));
+    let query = db.select().from(notifications).where(eq(notifications.userId, userId)).$dynamic();
 
     if (unreadOnly === 'true') {
       query = query.where(eq(notifications.isRead, false));

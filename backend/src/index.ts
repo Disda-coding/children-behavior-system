@@ -18,6 +18,7 @@ import notificationRoutes from './routes/notifications';
 import { logRoutes } from './routes/logs';
 import { backupRoutes } from './routes/backups';
 import { autoBackup } from './cron/backup';
+import type { AppEnv } from './types';
 
 // 定义环境变量类型
 export type Env = {
@@ -27,7 +28,7 @@ export type Env = {
 };
 
 // 创建 Hono 应用
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<AppEnv>();
 
 // 中间件
 app.use('*', logger());

@@ -2,10 +2,11 @@ import { Hono } from 'hono';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, and, desc } from 'drizzle-orm';
 import { achievements, userAchievements, users, pointRecords } from '../db/schema';
-import type { Env } from '../index';
+import type { AppEnv } from '../types';
 import { notifyAchievementUnlocked, notifyPointsEarned } from '../utils/notification';
+import { getUserMetrics, progressByCondition, badgeTier } from '../services/achievementService';
 
-const achievementRoutes = new Hono<{ Bindings: Env }>();
+const achievementRoutes = new Hono<AppEnv>();
 
 // 获取成就列表
 achievementRoutes.get('/', async (c) => {
@@ -150,7 +151,7 @@ achievementRoutes.post('/:id/assign', async (c) => {
         .select()
         .from(pointRecords)
         .where(eq(pointRecords.userId, userId))
-        .orderBy(desc(pointRecords.createdAt))
+        .orderBy(desc(pointRecords.createdAt), desc(pointRecords.id))
         .limit(1)
         .get();
 
@@ -225,7 +226,7 @@ achievementRoutes.post('/user-achievements/:id/revoke', async (c) => {
         .select()
         .from(pointRecords)
         .where(eq(pointRecords.userId, userAchievement.userAchievement.userId))
-        .orderBy(desc(pointRecords.createdAt))
+        .orderBy(desc(pointRecords.createdAt), desc(pointRecords.id))
         .limit(1)
         .get();
       
@@ -297,7 +298,7 @@ achievementRoutes.post('/user-achievements/:id/restore', async (c) => {
         .select()
         .from(pointRecords)
         .where(eq(pointRecords.userId, userAchievement.userAchievement.userId))
-        .orderBy(desc(pointRecords.createdAt))
+        .orderBy(desc(pointRecords.createdAt), desc(pointRecords.id))
         .limit(1)
         .get();
       
@@ -331,6 +332,7 @@ achievementRoutes.get('/user/:userId', async (c) => {
   const includeRevoked = c.req.query('includeRevoked') === 'true';
 
   try {
+    const metrics = await getUserMetrics(db, userId);
     let userAchievementsList;
 
     if (!includeRevoked) {
@@ -359,10 +361,20 @@ achievementRoutes.get('/user/:userId', async (c) => {
     }
     
     return c.json({
-      userAchievements: userAchievementsList.map(ua => ({
-        ...ua.userAchievement,
-        achievement: ua.achievement,
-      })),
+      userAchievements: userAchievementsList.map(ua => {
+        const achievement = ua.achievement;
+        // 实时进度：取「已存进度」与「按条件类型实时计算」的较大值
+        const liveProgress = achievement
+          ? progressByCondition(achievement.conditionType, metrics)
+          : 0;
+        const progress = Math.max(ua.userAchievement.progress || 0, liveProgress);
+        return {
+          ...ua.userAchievement,
+          achievement,
+          progress,
+          tier: badgeTier(achievement?.rewardPoints),
+        };
+      }),
     });
   } catch (error) {
     console.error('Get user achievements error:', error);

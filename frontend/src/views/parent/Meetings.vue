@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-6 px-4">
+  <div>
     <div class="max-w-6xl mx-auto">
       <!-- 页面标题 -->
       <div class="mb-8">
@@ -144,12 +144,12 @@
                 </span>
               </template>
 
-              <!-- 查看PPT按钮 -->
-              <button v-if="meeting.pptUrl" @click="viewPPT(meeting)" 
-                class="px-4 py-2 bg-indigo-100 text-indigo-600 rounded-xl text-sm hover:bg-indigo-200 transition-colors flex items-center gap-2">
-                <span>📊</span>
-                查看PPT
-              </button>
+              <!-- 查看附件链接 -->
+              <a v-if="meeting.pptUrl" :href="meeting.pptUrl" target="_blank" rel="noopener"
+                class="px-4 py-2 bg-accent/10 text-accent rounded-xl text-sm hover:bg-accent/20 transition-colors flex items-center gap-2">
+                <span>📎</span>
+                查看附件
+              </a>
 
               <!-- 删除按钮 -->
               <button v-if="meeting.status === 'cancelled' || meeting.status === 'completed'" 

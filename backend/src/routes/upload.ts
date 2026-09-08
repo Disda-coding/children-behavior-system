@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import { authMiddleware } from '../middleware/auth';
-import type { Env } from '../index';
+import type { AppEnv } from '../types';
 
-const uploadRoutes = new Hono<{ Bindings: Env }>();
+const uploadRoutes = new Hono<AppEnv>();
 
 // 应用认证中间件
 uploadRoutes.use('*', authMiddleware);

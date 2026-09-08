@@ -3,14 +3,51 @@ import { drizzle } from 'drizzle-orm/d1';
 import { eq, and, gte, desc } from 'drizzle-orm';
 import { pointRecords, pointRules, users } from '../db/schema';
 import { authMiddleware, parentMiddleware } from '../middleware/auth';
-import type { Env } from '../index';
+import type { AppEnv } from '../types';
 import { notifyPointsEarned, notifyPointsDeducted } from '../utils/notification';
 import { logPointOperation, logConfigOperation } from '../utils/logger';
+import { evaluateAchievements } from '../services/achievementService';
+import { getRings, updateStreakOnEarn, shanghaiToday } from '../services/streakService';
 
-const pointRoutes = new Hono<{ Bindings: Env }>();
+const pointRoutes = new Hono<AppEnv>();
 
 // 应用认证中间件
 pointRoutes.use('*', authMiddleware);
+
+// 每日三环数据（孩子查自己；家长可查同家庭任意孩子）
+pointRoutes.get('/rings', async (c) => {
+  const db = drizzle(c.env.DB);
+  const user = c.get('user');
+
+  try {
+    const currentUser = await db.select().from(users).where(eq(users.id, user.userId)).get();
+    if (!currentUser) {
+      return c.json({ error: 'User not found' }, 404);
+    }
+
+    let targetId = user.userId;
+    const queryUserId = Number(c.req.query('userId'));
+    if (queryUserId && queryUserId !== user.userId) {
+      if (currentUser.role !== 'parent') {
+        return c.json({ error: 'Forbidden' }, 403);
+      }
+      const target = await db.select().from(users).where(eq(users.id, queryUserId)).get();
+      if (!target || target.familyId !== currentUser.familyId) {
+        return c.json({ error: 'Forbidden - Target user not in the same family' }, 403);
+      }
+      targetId = queryUserId;
+    }
+
+    const rings = await getRings(db, targetId);
+    if (!rings) {
+      return c.json({ error: 'User not found' }, 404);
+    }
+    return c.json({ rings, date: shanghaiToday() });
+  } catch (error) {
+    console.error('Get rings error:', error);
+    return c.json({ error: 'Failed to get rings data' }, 500);
+  }
+});
 
 // 获取积分规则列表
 pointRoutes.get('/rules', async (c) => {
@@ -193,7 +230,7 @@ pointRoutes.get('/records', async (c) => {
       return c.json({ error: 'User not found' }, 404);
     }
 
-    let query = db.select().from(pointRecords);
+    let query = db.select().from(pointRecords).$dynamic();
 
     if (targetUserId) {
       const targetId = parseInt(targetUserId);
@@ -219,7 +256,7 @@ pointRoutes.get('/records', async (c) => {
       query = query.where(eq(pointRecords.type, type));
     }
 
-    const records = await query.orderBy(desc(pointRecords.createdAt));
+    const records = await query.orderBy(desc(pointRecords.createdAt), desc(pointRecords.id));
 
     return c.json({ records });
   } catch (error) {
@@ -263,7 +300,7 @@ pointRoutes.post('/records', parentMiddleware, async (c) => {
       .select({ balanceAfter: pointRecords.balanceAfter })
       .from(pointRecords)
       .where(eq(pointRecords.userId, data.userId))
-      .orderBy(desc(pointRecords.createdAt))
+      .orderBy(desc(pointRecords.createdAt), desc(pointRecords.id))
       .limit(1)
       .get();
 
@@ -293,6 +330,20 @@ pointRoutes.post('/records', parentMiddleware, async (c) => {
       await notifyPointsDeducted(c.env.DB, data.userId, data.amount, data.reason, result[0].id);
     }
 
+    // 得分后评估成就进度（达成则自动完成并发奖励）；评估失败不影响积分流程
+    let unlockedAchievements: unknown[] = [];
+    if (data.type === 'earn') {
+      try {
+        // 更新 Streak（含冻结卡逻辑）
+        const streakResult = await updateStreakOnEarn(db, data.userId);
+        void streakResult;
+
+        unlockedAchievements = await evaluateAchievements(db, c.env.DB, data.userId, targetUser.familyId);
+      } catch (evalError) {
+        console.error('Evaluate achievements error:', evalError);
+      }
+    }
+
     // 记录日志
     await logPointOperation(
       c.env.DB,
@@ -308,6 +359,7 @@ pointRoutes.post('/records', parentMiddleware, async (c) => {
     return c.json({
       message: 'Point record created successfully',
       record: result[0],
+      unlockedAchievements,
     }, 201);
   } catch (error) {
     console.error('Create point record error:', error);
@@ -353,7 +405,7 @@ pointRoutes.get('/stats', async (c) => {
       .select({ balanceAfter: pointRecords.balanceAfter })
       .from(pointRecords)
       .where(eq(pointRecords.userId, userIdNum))
-      .orderBy(desc(pointRecords.createdAt))
+      .orderBy(desc(pointRecords.createdAt), desc(pointRecords.id))
       .limit(1)
       .get();
 
@@ -398,6 +450,20 @@ pointRoutes.get('/stats', async (c) => {
       .filter(r => r.type === 'deduct')
       .reduce((sum, r) => sum + r.amount, 0);
 
+    // 全量记录（累计获得 / 累计支出，供积分记录页汇总卡使用）
+    const allRecords = await db
+      .select({ type: pointRecords.type, amount: pointRecords.amount })
+      .from(pointRecords)
+      .where(eq(pointRecords.userId, userIdNum));
+
+    const totalEarned = allRecords
+      .filter(r => r.type === 'earn')
+      .reduce((sum, r) => sum + r.amount, 0);
+
+    const totalSpent = allRecords
+      .filter(r => r.type !== 'earn')
+      .reduce((sum, r) => sum + Math.abs(r.amount), 0);
+
     return c.json({
       stats: {
         todayEarned,
@@ -405,6 +471,8 @@ pointRoutes.get('/stats', async (c) => {
         weekEarned,
         weekDeducted,
         totalBalance,
+        totalEarned,
+        totalSpent,
       },
     });
   } catch (error) {

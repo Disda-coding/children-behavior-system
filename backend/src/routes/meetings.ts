@@ -2,10 +2,10 @@ import { Hono } from 'hono';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, and, desc } from 'drizzle-orm';
 import { meetings, users, pointRecords } from '../db/schema';
-import type { Env } from '../index';
+import type { AppEnv } from '../types';
 import { notifyMeetingScheduled, notifyMeetingCancelled, notifyMeetingScored, notifyPointsEarned } from '../utils/notification';
 
-const meetingRoutes = new Hono<{ Bindings: Env }>();
+const meetingRoutes = new Hono<AppEnv>();
 
 // 获取会议列表
 meetingRoutes.get('/', async (c) => {
@@ -22,7 +22,7 @@ meetingRoutes.get('/', async (c) => {
         child: users,
       })
       .from(meetings)
-      .leftJoin(users, eq(meetings.childId, users.id));
+      .leftJoin(users, eq(meetings.childId, users.id)).$dynamic();
     
     if (familyId) {
       query = query.where(eq(meetings.familyId, parseInt(familyId)));
@@ -58,7 +58,7 @@ meetingRoutes.get('/stats', async (c) => {
     const familyId = c.req.query('familyId');
     const childId = c.req.query('childId');
     
-    let query = db.select().from(meetings);
+    let query = db.select().from(meetings).$dynamic();
     
     if (familyId) {
       query = query.where(eq(meetings.familyId, parseInt(familyId)));
@@ -278,7 +278,7 @@ meetingRoutes.post('/:id/score', async (c) => {
         .select()
         .from(pointRecords)
         .where(eq(pointRecords.userId, meetingInfo.childId))
-        .orderBy(desc(pointRecords.createdAt))
+        .orderBy(desc(pointRecords.createdAt), desc(pointRecords.id))
         .limit(1)
         .get();
 

@@ -3,9 +3,9 @@ import { drizzle } from 'drizzle-orm/d1';
 import { eq, and, desc, sql, like, gte, lte } from 'drizzle-orm';
 import { systemLogs, users } from '../db/schema';
 import { authMiddleware, parentMiddleware } from '../middleware/auth';
-import type { Env } from '../index';
+import type { AppEnv } from '../types';
 
-const logRoutes = new Hono<{ Bindings: Env }>();
+const logRoutes = new Hono<AppEnv>();
 
 // 应用认证中间件
 logRoutes.use('*', authMiddleware);

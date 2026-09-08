@@ -2,9 +2,9 @@ import { Hono } from 'hono';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, and, gte, desc } from 'drizzle-orm';
 import { pointRecords, achievements, userAchievements } from '../db/schema';
-import type { Env } from '../index';
+import type { AppEnv } from '../types';
 
-const statsRoutes = new Hono<{ Bindings: Env }>();
+const statsRoutes = new Hono<AppEnv>();
 
 // 获取积分统计
 statsRoutes.get('/points', async (c) => {
@@ -31,7 +31,7 @@ statsRoutes.get('/points', async (c) => {
         eq(pointRecords.userId, userIdNum),
         gte(pointRecords.createdAt, startDateStr)
       ))
-      .orderBy(desc(pointRecords.createdAt));
+      .orderBy(desc(pointRecords.createdAt), desc(pointRecords.id));
     
     // 按日期分组统计
     const dailyStats: Record<string, { earned: number; deducted: number }> = {};

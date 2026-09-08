@@ -1,19 +1,7 @@
 <template>
-  <div class="app-shell min-h-screen bg-gray-50">
-    <nav class="app-nav bg-white shadow-sm">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center h-16">
-          <router-link to="/parent/dashboard" class="text-gray-600 hover:text-gray-800 mr-4">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-          </router-link>
-          <h1 class="text-xl font-bold text-gray-800">申诉审核</h1>
-        </div>
-      </div>
-    </nav>
+  <div>
 
-    <main class="app-main max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div>
       <!-- 统计卡片 -->
       <div class="grid grid-cols-4 gap-4 mb-8">
         <div class="bg-white rounded-xl p-6 shadow-sm">
@@ -168,7 +156,7 @@
           </table>
         </div>
       </div>
-    </main>
+    </div>
 
     <!-- 通过申诉弹窗 -->
     <div v-if="showApproveModal" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">

@@ -2,10 +2,10 @@ import { Hono } from 'hono';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq, and, desc } from 'drizzle-orm';
 import { appeals, pointRecords, users, pointRules } from '../db/schema';
-import type { Env } from '../index';
+import type { AppEnv } from '../types';
 import { notifyAppealApproved, notifyAppealRejected } from '../utils/notification';
 
-const appealRoutes = new Hono<{ Bindings: Env }>();
+const appealRoutes = new Hono<AppEnv>();
 
 // 获取申诉列表
 appealRoutes.get('/', async (c) => {
@@ -24,7 +24,7 @@ appealRoutes.get('/', async (c) => {
       })
       .from(appeals)
       .leftJoin(pointRecords, eq(appeals.pointRecordId, pointRecords.id))
-      .leftJoin(users, eq(appeals.userId, users.id));
+      .leftJoin(users, eq(appeals.userId, users.id)).$dynamic();
     
     if (userId) {
       query = query.where(eq(appeals.userId, parseInt(userId)));
@@ -67,7 +67,7 @@ appealRoutes.get('/stats', async (c) => {
         user: users,
       })
       .from(appeals)
-      .leftJoin(users, eq(appeals.userId, users.id));
+      .leftJoin(users, eq(appeals.userId, users.id)).$dynamic();
     
     if (familyId) {
       query = query.where(eq(users.familyId, parseInt(familyId)));
@@ -159,7 +159,7 @@ appealRoutes.put('/:id/approve', async (c) => {
       .select()
       .from(pointRecords)
       .where(eq(pointRecords.userId, appeal.appeal.userId))
-      .orderBy(desc(pointRecords.createdAt))
+      .orderBy(desc(pointRecords.createdAt), desc(pointRecords.id))
       .limit(1)
       .get();
     

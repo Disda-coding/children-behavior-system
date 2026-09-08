@@ -68,6 +68,12 @@ export const userApi = {
 export const familyApi = {
   getFamily: (id: number) => api.get(`/api/families/${id}`) as Promise<any>,
   getMyFamily: () => api.get('/api/families/me') as Promise<any>,
+  updateFamily: (id: number, data: {
+    name?: string;
+    ringTargetPoints?: number;
+    ringTargetCount?: number;
+    cashExchangeRate?: number;
+  }) => api.put(`/api/families/${id}`, data) as Promise<any>,
   createFamily: (data: { name: string }) => api.post('/api/families', data) as Promise<any>,
   joinFamily: (data: { inviteCode: string }) =>
     api.post('/api/families/join', data) as Promise<any>,
@@ -100,6 +106,9 @@ export const pointApi = {
   }) => api.post('/api/points/records', data) as Promise<any>,
   getStats: (params: { userId: number }) =>
     api.get('/api/points/stats', { params }) as Promise<any>,
+  // 每日三环（孩子端游戏化）
+  getRings: (userId: number) =>
+    api.get('/api/points/rings', { params: { userId } }) as Promise<any>,
 };
 
 // 成就相关 API
@@ -113,7 +122,7 @@ export const achievementApi = {
     name: string;
     description?: string;
     iconUrl?: string;
-    conditionType: 'consecutive' | 'count' | 'accumulate';
+    conditionType: 'consecutive' | 'count' | 'accumulate' | 'streak';
     conditionValue: number;
     conditionUnit?: string;
     rewardPoints?: number;

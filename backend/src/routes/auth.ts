@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
 import { users, families } from '../db/schema';
-import type { Env } from '../index';
+import type { AppEnv } from '../types';
 import { checkLoginLimit, recordLoginFailure, clearLoginLimit, getClientIdentifier } from '../middleware/rateLimit';
 
 // JWT 工具函数
@@ -111,7 +111,7 @@ const loginSchema = z.object({
   password: z.string(),
 });
 
-const authRoutes = new Hono<{ Bindings: Env }>();
+const authRoutes = new Hono<AppEnv>();
 
 // 注册
 authRoutes.post('/register', zValidator('json', registerSchema), async (c) => {

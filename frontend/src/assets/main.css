@@ -1,9 +1,9 @@
-/* 全局样式 - 儿童行为管理系统 */
+/* 全局样式 - 儿童行为管理系统（基于设计令牌） */
 
 /* 页面容器 */
 .app-shell {
   min-height: 100vh;
-  background: linear-gradient(to bottom, #f8fafc, #f1f5f9);
+  background: var(--page-bg);
 }
 
 /* 导航栏 */
@@ -22,6 +22,14 @@
 }
 
 /* 卡片基础样式 */
+.card {
+  background: var(--color-card);
+  border-radius: 1rem;
+  box-shadow:
+    0 1px 2px rgb(28 28 30 / 4%),
+    0 4px 14px -6px rgb(28 28 30 / 8%);
+}
+
 .app-card {
   background: white;
   border-radius: 1rem;
@@ -133,12 +141,12 @@
 }
 
 .btn-primary {
-  background: #3b82f6;
+  background: var(--accent);
   color: white;
 }
 
 .btn-primary:hover {
-  background: #2563eb;
+  background: color-mix(in srgb, var(--accent) 85%, black);
 }
 
 .btn-secondary {
@@ -180,8 +188,8 @@
 
 .input:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 /* 标签样式 */

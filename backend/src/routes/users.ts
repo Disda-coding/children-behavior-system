@@ -3,9 +3,9 @@ import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
 import { users } from '../db/schema';
 import { authMiddleware } from '../middleware/auth';
-import type { Env } from '../index';
+import type { AppEnv } from '../types';
 
-const userRoutes = new Hono<{ Bindings: Env }>();
+const userRoutes = new Hono<AppEnv>();
 
 // 应用认证中间件
 userRoutes.use('*', authMiddleware);

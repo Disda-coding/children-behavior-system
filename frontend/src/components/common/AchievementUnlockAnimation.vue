@@ -1,7 +1,12 @@
 <template>
   <Teleport to="body">
     <Transition name="fade-scale">
-      <div v-if="shouldShow" class="achievement-unlock-overlay" @click="close">
+      <div
+        v-if="shouldShow"
+        class="unlock-overlay"
+        :style="{ '--tier-glow': palette.glow, '--tier-color': palette.main }"
+        @click="close"
+      >
         <!-- 背景光环 -->
         <div class="glow-rings">
           <div class="ring ring-1"></div>
@@ -9,84 +14,74 @@
           <div class="ring ring-3"></div>
         </div>
 
-        <!-- 粒子爆炸效果 -->
+        <!-- 放射粒子 -->
         <div class="particles-container">
+          <div v-for="n in 32" :key="n" class="particle" :style="getParticleStyle(n)"></div>
+        </div>
+
+        <!-- 彩带 -->
+        <div class="confetti-container">
           <div
-            v-for="n in 30"
-            :key="n"
-            class="particle"
-            :style="getParticleStyle(n)"
+            v-for="n in 24"
+            :key="`confetti-${n}`"
+            class="confetti"
+            :style="getConfettiStyle()"
           ></div>
         </div>
 
         <!-- 主内容 -->
         <div class="achievement-content" @click.stop>
-          <!-- 徽章容器 -->
-          <div class="badge-container" :class="{ 'animate': isAnimating }">
-            <!-- 外圈光环 -->
+          <div class="badge-container" :class="{ animate: isAnimating }">
             <div class="outer-glow"></div>
-            
-            <!-- 主徽章 -->
+
             <div class="main-badge">
-              <!-- 旋转的光环 -->
+              <!-- 旋转虚线光环 -->
               <svg class="rotating-ring" viewBox="0 0 200 200">
                 <defs>
-                  <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#fbbf24" />
-                    <stop offset="50%" stop-color="#f59e0b" />
-                    <stop offset="100%" stop-color="#d97706" />
+                  <linearGradient id="ring-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" :stop-color="palette.light" />
+                    <stop offset="100%" :stop-color="palette.dark" />
                   </linearGradient>
                 </defs>
                 <circle
                   cx="100"
                   cy="100"
-                  r="90"
+                  r="92"
                   fill="none"
-                  stroke="url(#gradient)"
-                  stroke-width="4"
+                  stroke="url(#ring-gradient)"
+                  stroke-width="3"
                   stroke-linecap="round"
-                  stroke-dasharray="20 10"
+                  stroke-dasharray="18 12"
                 />
               </svg>
 
-              <!-- 徽章背景 -->
-              <div class="badge-bg">
-                <div class="badge-icon">{{ currentAchievement?.icon || currentAchievement?.iconUrl || '🏆' }}</div>
+              <!-- 徽章：复用四档质感 SVG 徽章组件 -->
+              <div class="badge-core">
+                <BadgeIcon :tier="tier" :size="128" />
               </div>
 
               <!-- 星星装饰 -->
               <div class="stars">
-                <span v-for="n in 6" :key="n" class="star" :style="getStarStyle(n)">✨</span>
+                <span v-for="n in 6" :key="n" class="star" :style="getStarStyle(n)">✦</span>
               </div>
             </div>
           </div>
 
-          <!-- 文字内容 -->
-          <div class="text-content" :class="{ 'animate': isAnimating }">
-            <h2 class="unlock-title">恭喜获得成就！</h2>
-            <h3 class="achievement-name">{{ currentAchievement?.name }}</h3>
-            <p class="achievement-description">{{ currentAchievement?.description }}</p>
-            <div v-if="currentAchievement?.rewardPoints" class="reward-points">
-              <span class="points-icon">💎</span>
-              <span class="points-value">+{{ currentAchievement.rewardPoints }}</span>
+          <div class="text-content" :class="{ animate: isAnimating }">
+            <h2 class="unlock-title">{{ currentItem?.title || '恭喜获得成就！' }}</h2>
+            <h3 class="achievement-name">{{ currentItem?.name }}</h3>
+            <p v-if="currentItem?.description" class="achievement-description">
+              {{ currentItem.description }}
+            </p>
+            <div v-if="currentItem?.points" class="reward-points">
+              <span class="points-value">+{{ currentItem.points }}</span>
               <span class="points-label">积分</span>
             </div>
           </div>
 
-          <!-- 关闭按钮 -->
-          <button class="close-btn" @click="close">
+          <button class="close-btn" :class="{ animate: isAnimating }" @click="close">
             <span>太棒了！</span>
           </button>
-        </div>
-
-        <!-- 彩带效果 -->
-        <div class="confetti-container">
-          <div
-            v-for="n in 50"
-            :key="`confetti-${n}`"
-            class="confetti"
-            :style="getConfettiStyle(n)"
-          ></div>
         </div>
       </div>
     </Transition>
@@ -94,21 +89,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick, computed } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
+import BadgeIcon, { type Tier } from '@/components/child/BadgeIcon.vue';
 
-interface Achievement {
+interface CelebrationItem {
   id?: number;
   name: string;
   description?: string;
   icon?: string;
   iconUrl?: string;
+  points?: number;
   rewardPoints?: number;
+  title?: string;
+  tier?: Tier;
 }
 
 interface Props {
   show?: boolean;
-  achievement?: Achievement | null;
-  achievements?: Achievement[];
+  achievement?: CelebrationItem | null;
+  achievements?: CelebrationItem[];
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -123,11 +122,23 @@ const emit = defineEmits<{
 
 const isAnimating = ref(false);
 
-const currentAchievement = computed(() => {
+const currentItem = computed<CelebrationItem | null>(() => {
   if (props.achievement) return props.achievement;
-  if (props.achievements && props.achievements.length > 0) return props.achievements[0];
+  if (props.achievements && props.achievements.length > 0) return props.achievements[0] ?? null;
   return null;
 });
+
+const tier = computed<Tier>(() => currentItem.value?.tier || 'gold');
+
+/** 档次色系：光环、标题、旋转环配色随徽章档次变化 */
+const TIER_PALETTES: Record<Tier, { main: string; light: string; dark: string; glow: string }> = {
+  copper: { main: '#e89a6a', light: '#f7c9a8', dark: '#a05a30', glow: 'rgba(232, 154, 106, 0.45)' },
+  silver: { main: '#c3ccd6', light: '#eef2f6', dark: '#8894a2', glow: 'rgba(195, 204, 214, 0.45)' },
+  gold: { main: '#ffd24d', light: '#ffe9a3', dark: '#d9a40e', glow: 'rgba(255, 210, 77, 0.45)' },
+  platinum: { main: '#b99af0', light: '#e2d2ff', dark: '#7c55c4', glow: 'rgba(185, 154, 240, 0.5)' },
+};
+
+const palette = computed(() => TIER_PALETTES[tier.value]);
 
 const shouldShow = computed(() => {
   return props.show || (props.achievements && props.achievements.length > 0);
@@ -139,19 +150,23 @@ watch(shouldShow, async (newVal) => {
     await nextTick();
     setTimeout(() => {
       isAnimating.value = true;
-    }, 50);
+    }, 60);
   } else {
     isAnimating.value = false;
   }
 });
 
-// 生成粒子样式
+/**
+ * 放射粒子：通过 CSS 变量 --rotation 控制方向（内联 transform 会与
+ * keyframe 冲突导致全部直线上升，旧实现即踩了这个坑）
+ */
 const getParticleStyle = (index: number) => {
-  const angle = (index - 1) * (360 / 30);
+  const angle = (index - 1) * (360 / 32) + Math.random() * 10;
   const size = 4 + Math.random() * 8;
-  const delay = Math.random() * 0.5;
+  const delay = Math.random() * 0.4;
   const duration = 1 + Math.random() * 1;
-  const colors = ['#fbbf24', '#f59e0b', '#d97706', '#fcd34d', '#fbbf24'];
+  const distance = 140 + Math.random() * 120;
+  const colors = [palette.value.main, palette.value.light, '#ffffff', palette.value.dark];
   const color = colors[Math.floor(Math.random() * colors.length)];
 
   return {
@@ -159,41 +174,44 @@ const getParticleStyle = (index: number) => {
     height: `${size}px`,
     background: color,
     boxShadow: `0 0 ${size * 2}px ${color}`,
-    transform: `rotate(${angle}deg) translateY(0)`,
     animationDelay: `${delay}s`,
     animationDuration: `${duration}s`,
-  };
+    '--rotation': `${angle}deg`,
+    '--distance': `${distance}px`,
+  } as Record<string, string>;
 };
 
-// 生成星星样式
 const getStarStyle = (index: number) => {
   const angle = (index - 1) * 60;
-  const distance = 120;
-  const delay = 0.5 + index * 0.1;
+  const distance = 115 + (index % 2) * 14;
+  const delay = 0.55 + index * 0.09;
 
   return {
-    transform: `rotate(${angle}deg) translateY(-${distance}px)`,
     animationDelay: `${delay}s`,
-  };
+    '--rotation': `${angle}deg`,
+    '--distance': `${distance}px`,
+  } as Record<string, string>;
 };
 
-// 生成彩带样式
-const getConfettiStyle = (index: number) => {
-  const colors = ['#fbbf24', '#f59e0b', '#d97706', '#fcd34d', '#ef4444', '#22c55e', '#3b82f6'];
+const getConfettiStyle = () => {
+  const colors = [palette.value.main, palette.value.light, palette.value.dark, '#ffffff'];
   const color = colors[Math.floor(Math.random() * colors.length)];
   const left = Math.random() * 100;
-  const delay = Math.random() * 2;
-  const duration = 2 + Math.random() * 2;
-  const size = 6 + Math.random() * 6;
+  const delay = Math.random() * 1.2;
+  const duration = 2.4 + Math.random() * 1.6;
+  const width = 6 + Math.random() * 5;
+  const rotate = Math.random() * 360;
 
   return {
     left: `${left}%`,
     backgroundColor: color,
-    width: `${size}px`,
-    height: `${size}px`,
+    width: `${width}px`,
+    height: `${width * 0.45}px`,
     animationDelay: `${delay}s`,
     animationDuration: `${duration}s`,
-  };
+    transform: `rotate(${rotate}deg)`,
+    borderRadius: '2px',
+  } as Record<string, string>;
 };
 
 const close = () => {
@@ -202,10 +220,10 @@ const close = () => {
 </script>
 
 <style scoped>
-.achievement-unlock-overlay {
+.unlock-overlay {
   position: fixed;
   inset: 0;
-  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%);
+  background: radial-gradient(circle at center, rgba(12, 10, 16, 0.88) 0%, rgba(12, 10, 16, 0.95) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -213,7 +231,7 @@ const close = () => {
   overflow: hidden;
 }
 
-/* 背景光环 */
+/* ---------- 背景光环 ---------- */
 .glow-rings {
   position: absolute;
   inset: 0;
@@ -225,39 +243,39 @@ const close = () => {
 .ring {
   position: absolute;
   border-radius: 50%;
-  border: 2px solid rgba(251, 191, 36, 0.3);
+  border: 2px solid var(--tier-glow, rgba(255, 210, 77, 0.3));
 }
 
 .ring-1 {
   width: 300px;
   height: 300px;
-  animation: pulse-ring 2s ease-out infinite;
+  animation: pulse-ring 2.2s ease-out infinite;
 }
 
 .ring-2 {
   width: 400px;
   height: 400px;
-  animation: pulse-ring 2s ease-out infinite 0.3s;
+  animation: pulse-ring 2.2s ease-out infinite 0.35s;
 }
 
 .ring-3 {
   width: 500px;
   height: 500px;
-  animation: pulse-ring 2s ease-out infinite 0.6s;
+  animation: pulse-ring 2.2s ease-out infinite 0.7s;
 }
 
 @keyframes pulse-ring {
   0% {
-    transform: scale(0.8);
+    transform: scale(0.75);
     opacity: 1;
   }
   100% {
-    transform: scale(1.5);
+    transform: scale(1.6);
     opacity: 0;
   }
 }
 
-/* 粒子效果 */
+/* ---------- 放射粒子 ---------- */
 .particles-container {
   position: absolute;
   top: 50%;
@@ -278,15 +296,46 @@ const close = () => {
 @keyframes particle-explode {
   0% {
     opacity: 1;
-    transform: rotate(var(--rotation, 0deg)) translateY(0) scale(1);
+    transform: rotate(var(--rotation)) translateY(0) scale(1);
+  }
+  70% {
+    opacity: 1;
   }
   100% {
     opacity: 0;
-    transform: rotate(var(--rotation, 0deg)) translateY(-200px) scale(0);
+    transform: rotate(var(--rotation)) translateY(calc(var(--distance) * -1)) scale(0.2);
   }
 }
 
-/* 主内容 */
+/* ---------- 彩带 ---------- */
+.confetti-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.confetti {
+  position: absolute;
+  top: -12px;
+  animation: confetti-fall linear forwards;
+}
+
+@keyframes confetti-fall {
+  0% {
+    opacity: 0;
+    transform: translateY(0) rotate(0deg);
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(105vh) rotate(720deg);
+  }
+}
+
+/* ---------- 主内容 ---------- */
 .achievement-content {
   position: relative;
   z-index: 10;
@@ -295,30 +344,29 @@ const close = () => {
   max-width: 500px;
 }
 
-/* 徽章容器 */
 .badge-container {
   position: relative;
   width: 200px;
   height: 200px;
-  margin: 0 auto 40px;
+  margin: 0 auto 36px;
   transform: scale(0);
   opacity: 0;
 }
 
 .badge-container.animate {
-  animation: badge-entrance 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: badge-entrance 0.85s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 @keyframes badge-entrance {
   0% {
-    transform: scale(0) rotate(-180deg);
+    transform: scale(0) rotate(-160deg);
     opacity: 0;
   }
-  50% {
-    transform: scale(1.2) rotate(10deg);
+  55% {
+    transform: scale(1.18) rotate(8deg);
   }
-  70% {
-    transform: scale(0.9) rotate(-5deg);
+  72% {
+    transform: scale(0.92) rotate(-4deg);
   }
   100% {
     transform: scale(1) rotate(0deg);
@@ -326,96 +374,63 @@ const close = () => {
   }
 }
 
-/* 外圈光环 */
 .outer-glow {
   position: absolute;
-  inset: -20px;
+  inset: -24px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(251, 191, 36, 0.4) 0%, transparent 70%);
-  animation: glow-pulse 2s ease-in-out infinite;
+  background: radial-gradient(circle, var(--tier-glow) 0%, transparent 70%);
+  animation: glow-pulse 2.2s ease-in-out infinite;
 }
 
 @keyframes glow-pulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
-    opacity: 0.5;
+    opacity: 0.55;
   }
   50% {
-    transform: scale(1.2);
+    transform: scale(1.18);
     opacity: 1;
   }
 }
 
-/* 主徽章 */
 .main-badge {
   position: relative;
   width: 100%;
   height: 100%;
 }
 
-/* 旋转光环 */
 .rotating-ring {
   position: absolute;
   inset: 0;
-  animation: rotate 10s linear infinite;
+  animation: rotate 12s linear infinite;
 }
 
 @keyframes rotate {
-  from {
-    transform: rotate(0deg);
-  }
   to {
     transform: rotate(360deg);
   }
 }
 
-/* 徽章背景 */
-.badge-bg {
+.badge-core {
   position: absolute;
-  inset: 20px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 
-    0 10px 40px rgba(251, 191, 36, 0.5),
-    inset 0 -5px 20px rgba(0, 0, 0, 0.2),
-    inset 0 5px 20px rgba(255, 255, 255, 0.3);
-  animation: badge-shine 3s ease-in-out infinite;
+  animation: core-breathe 2.4s ease-in-out infinite;
 }
 
-@keyframes badge-shine {
-  0%, 100% {
-    box-shadow: 
-      0 10px 40px rgba(251, 191, 36, 0.5),
-      inset 0 -5px 20px rgba(0, 0, 0, 0.2),
-      inset 0 5px 20px rgba(255, 255, 255, 0.3);
-  }
-  50% {
-    box-shadow: 
-      0 20px 60px rgba(251, 191, 36, 0.7),
-      inset 0 -5px 20px rgba(0, 0, 0, 0.2),
-      inset 0 5px 20px rgba(255, 255, 255, 0.5);
-  }
-}
-
-.badge-icon {
-  font-size: 80px;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-  animation: icon-bounce 2s ease-in-out infinite;
-}
-
-@keyframes icon-bounce {
-  0%, 100% {
+@keyframes core-breathe {
+  0%,
+  100% {
     transform: scale(1);
   }
   50% {
-    transform: scale(1.1);
+    transform: scale(1.05);
   }
 }
 
-/* 星星装饰 */
 .stars {
   position: absolute;
   inset: 0;
@@ -426,30 +441,32 @@ const close = () => {
 
 .star {
   position: absolute;
-  font-size: 24px;
+  font-size: 20px;
+  color: var(--tier-color, #ffd24d);
+  text-shadow: 0 0 8px var(--tier-glow);
   opacity: 0;
-  animation: star-appear 0.5s ease-out forwards;
+  animation: star-appear 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 @keyframes star-appear {
   0% {
     opacity: 0;
-    transform: rotate(var(--rotation, 0deg)) translateY(-80px) scale(0);
+    transform: rotate(var(--rotation)) translateY(-70px) scale(0);
   }
   100% {
     opacity: 1;
-    transform: rotate(var(--rotation, 0deg)) translateY(-120px) scale(1);
+    transform: rotate(var(--rotation)) translateY(calc(var(--distance) * -1)) scale(1);
   }
 }
 
-/* 文字内容 */
+/* ---------- 文字 ---------- */
 .text-content {
   opacity: 0;
-  transform: translateY(30px);
+  transform: translateY(28px);
 }
 
 .text-content.animate {
-  animation: text-entrance 0.6s ease-out 0.5s forwards;
+  animation: text-entrance 0.55s ease-out 0.45s forwards;
 }
 
 @keyframes text-entrance {
@@ -460,129 +477,94 @@ const close = () => {
 }
 
 .unlock-title {
-  font-size: 28px;
-  font-weight: bold;
-  color: #fbbf24;
-  margin-bottom: 16px;
-  text-shadow: 0 2px 10px rgba(251, 191, 36, 0.5);
+  font-size: 27px;
+  font-weight: 800;
+  color: var(--tier-color, #ffd24d);
+  margin-bottom: 14px;
+  text-shadow: 0 2px 12px var(--tier-glow);
+  letter-spacing: 0.02em;
 }
 
 .achievement-name {
   font-size: 24px;
   font-weight: bold;
-  color: white;
-  margin-bottom: 12px;
+  color: #fff;
+  margin-bottom: 10px;
 }
 
 .achievement-description {
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 24px;
-  line-height: 1.5;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.78);
+  margin-bottom: 22px;
+  line-height: 1.55;
 }
 
-/* 奖励积分 */
 .reward-points {
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
   gap: 8px;
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-  padding: 12px 24px;
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  padding: 10px 24px;
   border-radius: 50px;
-  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.45);
   animation: points-pulse 2s ease-in-out infinite;
 }
 
-@keyframes points-pulse {
-  0%, 100% {
-    transform: scale(1);
-    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
-  }
-  50% {
-    transform: scale(1.05);
-    box-shadow: 0 6px 25px rgba(34, 197, 94, 0.6);
-  }
-}
-
-.points-icon {
-  font-size: 24px;
-}
-
 .points-value {
-  font-size: 28px;
-  font-weight: bold;
-  color: white;
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
 }
 
 .points-label {
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
 }
 
-/* 关闭按钮 */
-.close-btn {
-  margin-top: 40px;
-  padding: 16px 48px;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: white;
-  font-size: 18px;
-  font-weight: bold;
-  border: none;
-  border-radius: 50px;
-  cursor: pointer;
-  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
-  transition: all 0.3s ease;
-  opacity: 0;
-  transform: translateY(20px);
-  animation: button-entrance 0.5s ease-out 1s forwards;
-}
-
-@keyframes button-entrance {
-  to {
-    opacity: 1;
-    transform: translateY(0);
+@keyframes points-pulse {
+  0%,
+  100% {
+    transform: scale(1);
   }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+/* ---------- 关闭按钮 ---------- */
+.close-btn {
+  margin-top: 30px;
+  padding: 13px 46px;
+  border-radius: 50px;
+  border: none;
+  background: linear-gradient(135deg, var(--tier-color, #ffd24d) 0%, var(--tier-glow, #ffd24d) 100%);
+  color: #1c1206;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 22px var(--tier-glow);
+  transition:
+    transform 0.15s,
+    box-shadow 0.2s;
+  opacity: 0;
+}
+
+.close-btn.animate {
+  animation: text-entrance 0.5s ease-out 0.9s forwards;
 }
 
 .close-btn:hover {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 6px 25px rgba(59, 130, 246, 0.6);
+  transform: translateY(-2px) scale(1.03);
 }
 
 .close-btn:active {
-  transform: translateY(0) scale(0.98);
+  transform: scale(0.97);
 }
 
-/* 彩带效果 */
-.confetti-container {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.confetti {
-  position: absolute;
-  top: -20px;
-  border-radius: 2px;
-  animation: confetti-fall linear forwards;
-}
-
-@keyframes confetti-fall {
-  0% {
-    opacity: 1;
-    transform: translateY(0) rotate(0deg);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(100vh) rotate(720deg);
-  }
-}
-
-/* 过渡动画 */
+/* ---------- 弹层过渡 ---------- */
 .fade-scale-enter-active,
 .fade-scale-leave-active {
-  transition: all 0.5s ease;
+  transition: opacity 0.3s;
 }
 
 .fade-scale-enter-from,
@@ -590,36 +572,30 @@ const close = () => {
   opacity: 0;
 }
 
-.fade-scale-enter-from .achievement-content,
-.fade-scale-leave-to .achievement-content {
-  transform: scale(0.8);
-}
-
-/* 响应式 */
-@media (max-width: 640px) {
-  .badge-container {
-    width: 150px;
-    height: 150px;
+/* ---------- 无障碍：减少动效 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .ring,
+  .particle,
+  .confetti,
+  .outer-glow,
+  .rotating-ring,
+  .core-breathe,
+  .reward-points,
+  .star {
+    animation: none !important;
   }
 
-  .badge-icon {
-    font-size: 60px;
+  .particle,
+  .confetti,
+  .star {
+    display: none;
   }
 
-  .unlock-title {
-    font-size: 24px;
-  }
-
-  .achievement-name {
-    font-size: 20px;
-  }
-
-  .achievement-description {
-    font-size: 14px;
-  }
-
-  .points-value {
-    font-size: 24px;
+  .badge-container.animate,
+  .text-content.animate,
+  .close-btn.animate {
+    animation-duration: 0.01s !important;
+    animation-delay: 0s !important;
   }
 }
 </style>

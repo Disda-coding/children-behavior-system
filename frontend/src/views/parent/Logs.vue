@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-6 px-4">
+  <div>
     <div class="max-w-7xl mx-auto">
       <!-- 页面标题 -->
       <div class="mb-8">

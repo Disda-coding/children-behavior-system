@@ -45,3 +45,8 @@ wrangler.toml.bak
 .cache/
 .temp/
 .tmp/
+
+# Wrangler secrets
+.dev.vars
+.wrangler/
+.workbuddy/

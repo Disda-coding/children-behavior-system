@@ -10,6 +10,11 @@ export const users = sqliteTable('users', {
   displayName: text('display_name').notNull(),
   avatarUrl: text('avatar_url'),
   familyId: integer('family_id').notNull(),
+  // 游戏化：Streak 连续打卡（日期均为 Asia/Shanghai 的 YYYY-MM-DD）
+  streakCount: integer('streak_count').default(0),
+  streakLastDate: text('streak_last_date'),
+  streakFreezeCards: integer('streak_freeze_cards').default(2),
+  streakFreezeResetMonth: text('streak_freeze_reset_month'),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
 });
@@ -19,6 +24,11 @@ export const families = sqliteTable('families', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
   inviteCode: text('invite_code').unique(),
+  // 每日三环目标（家长可配置）
+  ringTargetPoints: integer('ring_target_points').default(20),
+  ringTargetCount: integer('ring_target_count').default(3),
+  // 现金兑换汇率：多少积分 = 1 元（默认 100）
+  cashExchangeRate: integer('cash_exchange_rate').default(100),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
 
@@ -58,7 +68,7 @@ export const achievements = sqliteTable('achievements', {
   name: text('name').notNull(),
   description: text('description'),
   iconUrl: text('icon_url'),
-  conditionType: text('condition_type', { enum: ['consecutive', 'count', 'accumulate'] }).notNull(),
+  conditionType: text('condition_type', { enum: ['consecutive', 'count', 'accumulate', 'streak'] }).notNull(),
   conditionValue: integer('condition_value').notNull(),
   conditionUnit: text('condition_unit'),
   rewardPoints: integer('reward_points').default(0),
@@ -95,6 +105,8 @@ export const rewards = sqliteTable('rewards', {
   stock: integer('stock'),
   isActive: integer('is_active', { mode: 'boolean' }).default(true),
   config: text('config', { mode: 'json' }),
+  // 零花钱标记：按家庭 cash_exchange_rate 折算展示
+  isCash: integer('is_cash', { mode: 'boolean' }).default(false),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
 });

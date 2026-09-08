@@ -4,9 +4,9 @@ import { eq, and } from 'drizzle-orm';
 import { families, users } from '../db/schema';
 import { authMiddleware, parentMiddleware } from '../middleware/auth';
 import { generateInviteCode } from '../utils/helpers';
-import type { Env } from '../index';
+import type { AppEnv } from '../types';
 
-const familyRoutes = new Hono<{ Bindings: Env }>();
+const familyRoutes = new Hono<AppEnv>();
 
 // 应用认证中间件
 familyRoutes.use('*', authMiddleware);
@@ -165,11 +165,21 @@ familyRoutes.put('/:id', parentMiddleware, async (c) => {
     }
     
     const data = await c.req.json();
-    
+
     const result = await db
       .update(families)
       .set({
         name: data.name,
+        // 家庭设置（可选更新）
+        ...(data.ringTargetPoints !== undefined
+          ? { ringTargetPoints: Math.max(1, Number(data.ringTargetPoints) || 20) }
+          : {}),
+        ...(data.ringTargetCount !== undefined
+          ? { ringTargetCount: Math.max(1, Number(data.ringTargetCount) || 3) }
+          : {}),
+        ...(data.cashExchangeRate !== undefined
+          ? { cashExchangeRate: Math.max(1, Number(data.cashExchangeRate) || 100) }
+          : {}),
       })
       .where(eq(families.id, familyId))
       .returning();

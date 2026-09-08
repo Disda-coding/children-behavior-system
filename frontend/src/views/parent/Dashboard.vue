@@ -1,42 +1,8 @@
 <template>
-  <div class="app-shell min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-    <!-- 导航栏 -->
-    <nav class="app-nav bg-white shadow-sm">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16">
-          <div class="flex items-center">
-            <router-link to="/parent/dashboard" class="text-gray-600 hover:text-gray-800 mr-4">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-            </router-link>
-            <h1 class="text-xl font-bold text-gray-800">家长控制台</h1>
-          </div>
-          <div class="flex items-center space-x-3">
-            <!-- 通知中心 -->
-            <NotificationCenter />
-            <div class="flex items-center space-x-2 px-3 py-1.5 bg-gray-100 rounded-full">
-              <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium text-sm">
-                {{ authStore.user?.displayName?.charAt(0) || '?' }}
-              </div>
-              <span class="text-gray-700 text-sm font-medium">{{ authStore.user?.displayName }}</span>
-            </div>
-            <button
-              @click="authStore.logout"
-              class="flex items-center gap-1.5 px-3 py-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all text-sm font-medium"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              退出
-            </button>
-          </div>
-        </div>
-      </div>
-    </nav>
+  <div>
 
     <!-- 主内容区域 -->
-    <main class="app-main max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div>
       <!-- 欢迎区域 -->
       <div class="hero-section mb-8">
         <h2 class="text-2xl font-bold text-gray-800 mb-2">欢迎回来，{{ authStore.user?.displayName }}！</h2>
@@ -257,7 +223,7 @@
           </div>
         </div>
       </div>
-    </main>
+    </div>
   </div>
 </template>
 
@@ -265,7 +231,6 @@
 import { ref, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { familyApi, pointApi, achievementApi, appealApi } from '@/api';
-import NotificationCenter from '@/components/common/NotificationCenter.vue';
 
 const authStore = useAuthStore();
 
